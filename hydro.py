@@ -14,7 +14,7 @@ def correct_timestamp(ts):
     else:
         return pd.to_datetime(ts)
 # %%
-data_path = join("data","external","TARIdry_1121222.dat")
+data_path = join("data","external","TARIwet_1120829.dat")
 df = pd.read_csv(data_path)
 # Pre-process and correct the TIMESTAMP column
 df['TIMESTAMP'] = df['TIMESTAMP'].apply(correct_timestamp)
@@ -45,7 +45,8 @@ if 'Rain_mm_Tot' in hourly_avg.columns:
     ax2.set_ylabel('Rainfall (mm)', color='c')  # Set label for the secondary Y-axis
     ax2.tick_params(axis='y', labelcolor='c')  # Set ticks color for the secondary Y-axis
 
-# Common plot adjustments
+# Set x-axis one week interval
+ax1.xaxis.set_major_locator(plt.MaxNLocator(35))
 ax1.set_title('Hourly Averages of Hydrological Data and Rainfall')
 ax1.set_xlabel('Time')
 ax1.set_ylabel('Average Value')
