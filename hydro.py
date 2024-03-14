@@ -13,23 +13,39 @@ def correct_timestamp(ts):
         return corrected_ts
     else:
         return pd.to_datetime(ts)
+
+def read_hydro_data(data_path):
+    df = pd.read_csv(data_path)
+    # Pre-process and correct the TIMESTAMP column
+    df['TIMESTAMP'] = df['TIMESTAMP'].apply(correct_timestamp)
+
+    # Set the TIMESTAMP column as the DataFrame index
+    df.set_index('TIMESTAMP', inplace=True)
+
+    # Resample the data to hourly averages
+    hourly_avg = df.resample('H').mean()
+    if 'Rain_mm_Tot' in hourly_avg.columns:
+        # Summing the rain data to the daily rainfall
+        daily_rainfall = hourly_avg['Rain_mm_Tot'].resample('D').sum()
+    # Delete the RECORD, BattV column
+    hourly_avg.drop('RECORD', axis=1, inplace=True)
+    hourly_avg.drop('BattV', axis=1, inplace=True)
+
+    return hourly_avg, daily_rainfall
 # %%
-data_path = join("data","external","TARIwet_1120829.dat")
-df = pd.read_csv(data_path)
-# Pre-process and correct the TIMESTAMP column
-df['TIMESTAMP'] = df['TIMESTAMP'].apply(correct_timestamp)
-
-# Set the TIMESTAMP column as the DataFrame index
-df.set_index('TIMESTAMP', inplace=True)
-
-# Resample the data to hourly averages
-hourly_avg = df.resample('H').mean()
-if 'Rain_mm_Tot' in hourly_avg.columns:
-    # Summing the rain data to the daily rainfall
-    daily_rainfall = hourly_avg['Rain_mm_Tot'].resample('D').sum()
-# Delete the RECORD, BattV column
-hourly_avg.drop('RECORD', axis=1, inplace=True)
-hourly_avg.drop('BattV', axis=1, inplace=True)
+# Read the CHUT hydrological data
+data_path = join("data","external","CHUT_1120818.dat")
+hourly_avg, daily_rainfall = read_hydro_data(data_path)
+plot_target = ['Result_30cm_Avg', 'Result_50cm_Avg', 'Result_100cm_Avg']
+fig, ax1 = plt.subplots(figsize=(20, 8))
+for column in hourly_avg.columns:
+    if column in plot_target:
+        print(column)
+        ax1.scatter(hourly_avg.index, hourly_avg[column], s=1, marker='o', label=column)
+        ax1.set_title('Hourly Averages of Hydrological Data and Rainfall')
+        ax1.set_xlabel('Time')
+        ax1.set_ylabel('Average Value')
+        ax1.set_ylim(0, 100)
 # %%
 # Plot setup
 fig, ax1 = plt.subplots(figsize=(20, 8))
