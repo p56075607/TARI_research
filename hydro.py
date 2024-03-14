@@ -14,7 +14,7 @@ def correct_timestamp(ts):
     else:
         return pd.to_datetime(ts)
 # %%
-data_path = join("data","external","¹A¸Õ©Ò¦Ë¶í¯¸_1120818.dat")
+data_path = join("data","external","TARIdry_1121222.dat")
 df = pd.read_csv(data_path)
 # Pre-process and correct the TIMESTAMP column
 df['TIMESTAMP'] = df['TIMESTAMP'].apply(correct_timestamp)
@@ -24,6 +24,9 @@ df.set_index('TIMESTAMP', inplace=True)
 
 # Resample the data to hourly averages
 hourly_avg = df.resample('H').mean()
+if 'Rain_mm_Tot' in hourly_avg.columns:
+    # Summing the rain data to the daily rainfall
+    daily_rainfall = hourly_avg['Rain_mm_Tot'].resample('D').sum()
 # Delete the RECORD, BattV column
 hourly_avg.drop('RECORD', axis=1, inplace=True)
 hourly_avg.drop('BattV', axis=1, inplace=True)
@@ -46,11 +49,8 @@ if 'Rain_mm_Tot' in hourly_avg.columns:
 ax1.set_title('Hourly Averages of Hydrological Data and Rainfall')
 ax1.set_xlabel('Time')
 ax1.set_ylabel('Average Value')
+ax1.set_ylim(0, 100)  # Set y-axis limits for the primary Y-axis
 fig.legend(loc="upper left", bbox_to_anchor=(0.1,0.9))
-plt.xticks(rotation=45)
-plt.tight_layout()
-
-ax.legend()
 plt.xticks(rotation=45)
 plt.tight_layout()
 plt.show()
