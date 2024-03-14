@@ -38,10 +38,10 @@ for column in hourly_avg.columns:
     if column != 'Rain_mm_Tot':
         ax1.scatter(hourly_avg.index, hourly_avg[column], s=1, marker='o', label=column)
 
-# Adding secondary Y-axis for "Rain_mm_Tot" if present
+
 if 'Rain_mm_Tot' in hourly_avg.columns:
     ax2 = ax1.twinx()  # Create a second Y-axis sharing the same X-axis
-    ax2.bar(hourly_avg.index, hourly_avg['Rain_mm_Tot'], width=1, alpha=0.3, color='c', label='Rain_mm_Tot')
+    ax2.bar(daily_rainfall.index, daily_rainfall, width=1, alpha=0.3, color='c', label='Rainfall')
     ax2.set_ylabel('Rainfall (mm)', color='c')  # Set label for the secondary Y-axis
     ax2.tick_params(axis='y', labelcolor='c')  # Set ticks color for the secondary Y-axis
 
