@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+plt.rcParams["font.family"] = "Microsoft Sans Serif"
 from os.path import join
 from datetime import timedelta
 import matplotlib.dates as mdates
@@ -42,8 +43,8 @@ def plot_hydro_data(hourly_avg, daily_rainfall, plot_target):
             # ax1.scatter(hourly_avg.index, hourly_avg[column], s=1, marker='o', label=column)
             ax1.plot(hourly_avg.index, hourly_avg[column],linewidth=1, label=column)
             ax1.set_title('Hourly Averages of Hydrological Data and Rainfall')
-            ax1.set_xlabel('Time')
-            ax1.set_ylabel('Average Value')
+            ax1.set_xlabel('Time (YYYY-MM-DD)')
+            ax1.set_ylabel('Soil Moisture (%)')
             ax1.set_ylim(0, 100)        
     ax1.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=mdates.MONDAY))
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
@@ -59,6 +60,7 @@ def plot_hydro_data(hourly_avg, daily_rainfall, plot_target):
         ax2.tick_params(axis='y', labelcolor='c')  # Set ticks color for the secondary Y-axis
 
     fig.legend(loc="upper right", bbox_to_anchor=(0.9,0.9))
+    return fig
 
 # %%
 # Read the CHUT hydrological data
@@ -67,10 +69,12 @@ hourly_avg, daily_rainfall = read_hydro_data(data_path)
 plot_target = ['Result_10cm_Avg', 'Result_20cm_Avg', 'Result_30cm_Avg',
     'Result_40cm_Avg', 'Result_50cm_Avg', 'Result_60cm_Avg',
     'Result_80cm_Avg', 'Result_100cm_Avg']
-plot_hydro_data(hourly_avg, daily_rainfall, plot_target)
+fig = plot_hydro_data(hourly_avg, daily_rainfall, plot_target)
+fig.savefig(join("output","hydro_data_10.png"),dpi=300, bbox_inches='tight')
 # %%
 plot_target = ['Result_150cm_Avg',
        'Result_200cm_Avg', 'Result_300cm_Avg', 'Result_400cm_Avg',
        'Result_500cm_Avg', 'Result_600cm_Avg', 'Result_700cm_Avg',
        'Result_800cm_Avg', 'Result_900cm_Avg']
-plot_hydro_data(hourly_avg, daily_rainfall, plot_target)
+fig = plot_hydro_data(hourly_avg, daily_rainfall, plot_target)
+fig.savefig(join("output","hydro_data_150.png"),dpi=300, bbox_inches='tight')
