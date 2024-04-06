@@ -89,16 +89,14 @@ tlmgr.invert(mesh=grid, lam=100, maxIter=40,verbose=True)
 
 # %%
 kw_appres = dict(cMin=rho1, cMax=rho2, cMap='jet', logScale=True, orientation='vertical',
-                    label='appres', xlabel='Distance (m)', ylabel='Array type and \nElectrode separation (m)')
+                     xlabel='Distance (m)', ylabel='Array type and \nElectrode separation (m)')
 kw_compare = dict(cMin=-50, cMax=50, cMap='bwr',
                   label=r'$\Delta \rho$ (%)',
                   xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical')
 fig, ax = plt.subplots(figsize=(3*10, 11*3), 
                        ncols=3, nrows=11,constrained_layout=False)
 for n,inf_depth in enumerate(inf_depths):
-    ert.show(DATA[n], ax=ax[n, 0],cMin=rho1, cMax=rho2, cMap='jet', logScale=True, orientation='vertical',
-                    # label='appres', xlabel='Distance (m)', ylabel='Array type and \nElectrode separation (m)'
-                    )#**kw_appres)
+    ert.show(DATA[n], ax=ax[n, 0],**kw_appres)
     pg.show(tlmgr.pd, tlmgr.models[n],ax=ax[n,1], **kw)
 
     if n == 0:
