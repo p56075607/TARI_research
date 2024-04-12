@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from os.path import join
-
+plt.rcParams["font.family"] = "Microsoft Sans Serif"
 import pygimli as pg
 import pygimli.meshtools as mt
 from pygimli.physics import ert
@@ -100,7 +100,7 @@ def plot_residual_contour(ax, grid, data, title,mesh_x,mesh_y, **kw_compare):
             return np.ma.masked_array(np.interp(value, x, y))
 
     clim = [-50, 50]
-    midnorm=StretchOutNormalize(vmin=clim[0], vmax=clim[1], low=-8, up=8)
+    midnorm=StretchOutNormalize(vmin=clim[0], vmax=clim[1], low=-0, up=0)
 
     X,Y = np.meshgrid(mesh_x,mesh_y)
     diff_pos = pg.interpolate(grid, data, grid.positions())
@@ -144,10 +144,16 @@ for n,inf_depth in enumerate(inf_depths):
     ax[n, 0].set_title('Infiltration depth: %.1f m'%-inf_depth)
     pg.show(tlmgr.pd, tlmgr.models[n],ax=ax[n,1], **kw)
     ax[n, 1].set_title('Infiltration depth: %.1f m'%-inf_depth)
-
+    triangle_left = np.array([[left, -depth], [left+depth, -depth], [left,0], [left, -depth]])
+    triangle_right = np.array([[right, -depth], [right-depth, -depth], [right,0], [right, depth]])
+    ax[n, 1].add_patch(plt.Polygon(triangle_left,color='white'))
+    ax[n, 1].add_patch(plt.Polygon(triangle_right,color='white'))   
     if n == 0:
         pg.show(tlmgr.pd, tlmgr.models[n],ax=ax[n,2], **kw)
-        ax[n, 2].set_title('Infiltration depth: %.1f m'%-inf_depth)
+        ax[n, 2].set_title('Infiltration depth: {:.1f} m, $\chi2$={:.2f}'.format(
+            -inf_depth,tlmgr.chi2s[n]))
+        ax[n, 2].add_patch(plt.Polygon(triangle_left,color='white'))
+        ax[n, 2].add_patch(plt.Polygon(triangle_right,color='white'))
     else:
         # pg.show(tlmgr.pd, 
         #         100*(tlmgr.models[n]-tlmgr.models[0])/tlmgr.models[0],ax=ax[n,2],
@@ -161,6 +167,61 @@ for n,inf_depth in enumerate(inf_depths):
         ax[n, 2].plot(pg.x(interface2.nodes()),pg.y(interface2.nodes()),'--k')
 fig.savefig(join('output','ERT_infiltration.png'),dpi=300,bbox_inches='tight')
 # %%
+def plot_residual_contour(ax, grid, data, title,mesh_x,mesh_y, **kw_compare):
+    class StretchOutNormalize(plt.Normalize):
+        def __init__(self, vmin=None, vmax=None, low=None, up=None, clip=False):
+            self.low = low
+            self.up = up
+            plt.Normalize.__init__(self, vmin, vmax, clip)
+
+        def __call__(self, value, clip=None):
+            x, y = [self.vmin, self.low, self.up, self.vmax], [0, 0.5-1e-9, 0.5+1e-9, 1]
+            return np.ma.masked_array(np.interp(value, x, y))
+
+    clim = [-10, 10]
+    midnorm=StretchOutNormalize(vmin=clim[0], vmax=clim[1], low=-0, up=0)
+
+    X,Y = np.meshgrid(mesh_x,mesh_y)
+    diff_pos = pg.interpolate(grid, data, grid.positions())
+    mesh = np.reshape(diff_pos,(len(mesh_y),len(mesh_x)))
+    ax.contourf(X,Y,mesh,
+                levels = 128,
+                cmap='bwr',
+                norm=midnorm)
+    ax.set_title(title, fontweight="bold", size=16)
+    ax.set_xlabel('Distance (m)')
+    ax.set_ylabel('Depth (m)')
+    triangle_left = np.array([[left, -depth], [left+depth, -depth], [left,0], [left, -depth]])
+    triangle_right = np.array([[right, -depth], [right-depth, -depth], [right,0], [right, depth]])
+    ax.add_patch(plt.Polygon(triangle_left,color='white'))
+    ax.add_patch(plt.Polygon(triangle_right,color='white'))
+    ax.set_ylim(-4, 0)
+    ax.set_xlim([left,right])
+    ax.set_aspect('equal')
+
+    divider = make_axes_locatable(ax)
+    cbaxes = divider.append_axes("right", size="4%", pad=.15)
+    m = plt.cm.ScalarMappable(cmap=plt.cm.bwr,norm=midnorm)
+    m.set_array(mesh)
+    m.set_clim(clim[0],clim[1])
+    cb = plt.colorbar(m,
+                    boundaries=np.linspace(clim[0],clim[1], 128),
+                    cax=cbaxes)
+    cb_ytick = np.linspace(clim[0],clim[1],5)
+    cb.ax.set_yticks(cb_ytick)
+    cb.ax.set_yticklabels(['{:.0f}'.format(x) for x in cb_ytick])
+    cb.ax.set_ylabel(r'$\Delta log(\rho)$ (%)')
+for n,inf_depth in enumerate(inf_depths):
+    fig, ax = plt.subplots()
+    res_change = pg.interpolate(ERTDomain, 100*(np.log10(tlmgr.models[n])-np.log10(tlmgr.models[0]))/np.log10(tlmgr.models[0]), ERTDomain.cellCenters())
+    plot_residual_contour(ax,ERTDomain,res_change,
+                            'Infiltration depth: %.1f m'%-inf_depth,
+                            xDevide,yDevide,**kw_compare)
+    interface2 = mt.createLine(start=[left, inf_depth], end=[right, inf_depth])
+    ax.plot(pg.x(interface2.nodes()),pg.y(interface2.nodes()),'--k')
+    ax.set_yticks(np.linspace(-4,0,5))
+    fig.savefig(join('output','ERT_infiltration', 'ERT_infiltration_%.1f.jpg'%inf_depth), dpi=300, bbox_inches='tight')
+# %%
 from pygimli.frameworks import PriorModelling
 y = np.linspace(-4,0,50)
 x = 10*np.ones(len(y))
@@ -173,10 +234,13 @@ for n,inf_depth in enumerate(inf_depths):
     res_change = pg.interpolate(ERTDomain, 100*(tlmgr.models[n]-tlmgr.models[0])/tlmgr.models[0], ERTDomain.cellCenters())
     ax.semilogx(fopDP(tlmgr.models[n]),y,label='Infiltration depth: %.1f m'%-inf_depth)
 ax.legend()
+ax.grid(which='both',linestyle='--',linewidth=0.5)
 fig.savefig(join('output','ERT_infiltration_1D.png'),dpi=300,bbox_inches='tight')
 # %%
-tlmgr.showAllModels(**kw)
-tlmgr.showAllModels(ratio=True,rMax=2)
+# constrained_tlmgr = ert.TimelapseERT(DATA)
+# constrained_ERTDomain = ERTDomain + pg.meshtools.createLine(start=[left, -depth], end=[right, -depth])
+# constrained_grid = pg.meshtools.appendTriangleBoundary(constrained_ERTDomain, marker=1,xbound=100, ybound=100)
+# constrained_tlmgr.invert(mesh=constrained_grid, lam=100,zWeight=0.8, maxIter=40,verbose=True)
 # %%
 # %%
 # Varify the fitted and measured data cross plot
