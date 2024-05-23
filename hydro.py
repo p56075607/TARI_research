@@ -95,39 +95,43 @@ def plot_hydro_data(hourly_avg, daily_rainfall, plot_target,dates):
 
 
 # Read the hydrological data
-data_path = join("data","external","農試所水田_1120829.dat")
-hourly_avg, daily_rainfall = read_hydro_data(data_path)
-dates = check_files_in_directory(r'C:\Users\R2MSDATA\TARI_E1\urf')
-plot_target = ['Result_10cm_Avg', 'Result_20cm_Avg', 'Result_30cm_Avg',
-    'Result_40cm_Avg', 'Result_50cm_Avg', 'Result_60cm_Avg',
-    'Result_80cm_Avg', 'Result_100cm_Avg',
-    'Result_150cm_Avg',
-       'Result_200cm_Avg', 'Result_300cm_Avg', 'Result_400cm_Avg',
-       'Result_500cm_Avg', 'Result_600cm_Avg', 'Result_700cm_Avg',
-       'Result_800cm_Avg', 'Result_900cm_Avg']
-fig = plot_hydro_data(hourly_avg, daily_rainfall, plot_target,dates)
-# fig.savefig(join("output","hydro_data_10.png"),dpi=300, bbox_inches='tight')
+# data_path = join("data","external","農試所水田_1120829.dat")
+# hourly_avg, daily_rainfall = read_hydro_data(data_path)
+# dates = check_files_in_directory(r'C:\Users\R2MSDATA\TARI_E1\urf')
+# plot_target = ['Result_10cm_Avg', 'Result_20cm_Avg', 'Result_30cm_Avg',
+#     'Result_40cm_Avg', 'Result_50cm_Avg', 'Result_60cm_Avg',
+#     'Result_80cm_Avg', 'Result_100cm_Avg',
+#     'Result_150cm_Avg',
+#        'Result_200cm_Avg', 'Result_300cm_Avg', 'Result_400cm_Avg',
+#        'Result_500cm_Avg', 'Result_600cm_Avg', 'Result_700cm_Avg',
+#        'Result_800cm_Avg', 'Result_900cm_Avg']
+# fig = plot_hydro_data(hourly_avg, daily_rainfall, plot_target,dates)
+# # fig.savefig(join("output","hydro_data_10.png"),dpi=300, bbox_inches='tight')
+
+# # %%
+# data_path = join("data","external","農試所竹塘站_1120818.dat")
+# hourly_avg, daily_rainfall = read_hydro_data(data_path)
+# dates = check_files_in_directory(r'C:\Users\R2MSDATA\TARI_E3\urf')
+# plot_target = ['Result_10cm_Avg', 'Result_20cm_Avg', 'Result_30cm_Avg',
+#     'Result_40cm_Avg', 'Result_50cm_Avg', 'Result_60cm_Avg',
+#     'Result_80cm_Avg', 'Result_100cm_Avg',
+#     'Result_150cm_Avg',
+#        'Result_200cm_Avg', 'Result_300cm_Avg', 'Result_400cm_Avg',
+#        'Result_500cm_Avg', 'Result_600cm_Avg', 'Result_700cm_Avg',
+#        'Result_800cm_Avg', 'Result_900cm_Avg']
+# fig = plot_hydro_data(hourly_avg, daily_rainfall, plot_target,dates)
 
 # %%
-data_path = join("data","external","農試所竹塘站_1120818.dat")
-hourly_avg, daily_rainfall = read_hydro_data(data_path)
-dates = check_files_in_directory(r'C:\Users\R2MSDATA\TARI_E3\urf')
-plot_target = ['Result_10cm_Avg', 'Result_20cm_Avg', 'Result_30cm_Avg',
-    'Result_40cm_Avg', 'Result_50cm_Avg', 'Result_60cm_Avg',
-    'Result_80cm_Avg', 'Result_100cm_Avg',
-    'Result_150cm_Avg',
-       'Result_200cm_Avg', 'Result_300cm_Avg', 'Result_400cm_Avg',
-       'Result_500cm_Avg', 'Result_600cm_Avg', 'Result_700cm_Avg',
-       'Result_800cm_Avg', 'Result_900cm_Avg']
-fig = plot_hydro_data(hourly_avg, daily_rainfall, plot_target,dates)
-
-# %%
-data_path = join("data","external","農試所旱田_1121222.dat")
+data_path = join("data","external","農試所旱田_1130514.dat")
 hourly_avg, daily_rainfall = read_hydro_data(data_path)
 dates = check_files_in_directory(r'C:\Users\R2MSDATA\TARI_E2\urf')
 plot_target = ['Result_10cm_Avg', 'Result_20cm_Avg', 'Result_30cm_Avg',
     'Result_40cm_Avg', 'Result_50cm_Avg', 'Result_60cm_Avg',
-    'Result_80cm_Avg', 'Result_100cm_Avg']
+    'Result_80cm_Avg', 'Result_100cm_Avg',
+    'Result_150cm_Avg',
+       'Result_200cm_Avg', 'Result_300cm_Avg', 'Result_400cm_Avg',
+       'Result_500cm_Avg', 'Result_600cm_Avg', 'Result_700cm_Avg',
+       'Result_800cm_Avg', 'Result_900cm_Avg']
 fig = plot_hydro_data(hourly_avg, daily_rainfall, plot_target,dates)
 # %%
 # plot_target = ['Result_150cm_Avg',
