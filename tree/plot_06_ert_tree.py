@@ -31,7 +31,7 @@ print(data)
 ###############################################################################
 # It uses 24 electrodes around the circumference and applies a dipole-dipole
 # (AB-MN) array. For each of the 24 dipoles being used as current injection
-# (AB), 21 potential dipoles (from 3-4 to 23-24) can be measured of which 10
+# (AB), 21 potential dipoles (from 3-4 to 23-24) can be measured of which 11
 # are measured, so that we end up in a total of 24*11=264 measurements.
 # Apart from current ('a' and 'b') and potential ('m', 'n') electrodes, the
 # file contains current ('i'), voltage ('u') and resistance ('r') vectors for
@@ -99,7 +99,7 @@ ax.set_ylabel('y [m]')
 # References
 # ----------
 # - Günther, T., Rücker, C. & Spitzer, K. (2006): Three-dimensional modeling &
-#   inversion of dc resistivity data incorporating topography – II: Inversion.
+#   inversion of dc resistivity data incorporating topography ??? II: Inversion.
 #   Geophys. J. Int. 166, 506-517, doi:10.1111/j.1365-246X.2006.03011.x
 # - Göcke, L., Rust, S., Weihs, U., Günther, T. & Rücker, C. (2008): Combining
 #   sonic and electrical impedance tomography for the nondestructive testing of
