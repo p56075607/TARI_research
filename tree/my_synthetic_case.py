@@ -14,7 +14,7 @@ print(scheme)
 plc = mt.createPolygon(scheme.sensors(), isClosed=True,
                        addNodes=3, interpolate='spline',boundaryMarker=-1)
 
-mesh = mt.createMesh(plc, quality=34.3, area=2e-4, smooth=[10, 1])
+mesh = mt.createMesh(plc, quality=34.3, area=8e-5, smooth=[10, 1])
 print(mesh)
 ax, _ = pg.show(mesh,markers=True)
 for i, s in enumerate(scheme.sensors()):
@@ -40,7 +40,7 @@ mgr.invert(mesh=mesh, verbose=True)
 
 # %%
 c3 = mt.createCircle(pos=(0.0, 0.0), radius=0.1, segments=100, marker=1)
-mesh_constrain = mt.createMesh(plc+c3, quality=34.3, area=2e-4, smooth=[10, 1])
+mesh_constrain = mt.createMesh(plc+c3, quality=34.3, area=8e-5, smooth=[10, 1])
 print(mesh_constrain)
 ax, _ = pg.show(mesh_constrain,markers=True)
 for i, s in enumerate(scheme.sensors()):
@@ -62,14 +62,17 @@ ax2.axis('off')
 # Subplot 1:Original resistivity model
 pg.viewer.showMesh(mesh_fwd, model_rho,ax=ax1, **kw)
 ax1.set_title('Original resistivity model profile',fontweight="bold", size=16)
+ax1.plot(pg.x(data_sim),pg.y(data_sim),'ko')
 
 # Subplot 3:Normal inversion result
 pg.show(mgr.paraDomain, mgr.model, ax=ax3, **kw)
 ax3.plot(pg.x(c2.nodes()),pg.y(c2.nodes()),'--w')
 ax3.set_title('Normal inversion result', fontweight="bold", size=16)
+ax3.plot(pg.x(data_sim),pg.y(data_sim),'ko')
 # Subplot 5:Constrained inversion result
 pg.show(mgr_constrain.paraDomain, mgr_constrain.model, ax=ax5, **kw)
 ax5.set_title('Constrained inversion result', fontweight="bold", size=16)
+ax5.plot(pg.x(data_sim),pg.y(data_sim),'ko')
 
 
 
@@ -94,7 +97,7 @@ def plot_residual_contour(ax, grid, data, title,mesh_x,mesh_y, **kw_compare):
             x, y = [self.vmin, self.low, self.up, self.vmax], [0, 0.5-1e-9, 0.5+1e-9, 1]
             return np.ma.masked_array(np.interp(value, x, y))
     clim = [kw_compare['cMin'], kw_compare['cMax']]
-    midnorm=StretchOutNormalize(vmin=clim[0], vmax=clim[1], low=-10, up=10)
+    midnorm=StretchOutNormalize(vmin=clim[0], vmax=clim[1], low=-1, up=1)
     X,Y = np.meshgrid(mesh_x,mesh_y)
     diff_pos = pg.interpolate(grid, data, grid.positions())
     mesh = np.reshape(diff_pos,(len(mesh_y),len(mesh_x)))
@@ -119,113 +122,14 @@ def plot_residual_contour(ax, grid, data, title,mesh_x,mesh_y, **kw_compare):
     cb.ax.set_yticklabels(['{:.0f}'.format(x) for x in cb_ytick])
     cb.ax.set_ylabel('Relative resistivity difference\n(%)')
 
-kw_compare = dict(cMin=-80, cMax=80, cMap='bwr',
+kw_compare = dict(cMin=-10, cMax=10, cMap='bwr',
                 label='Relative resistivity difference \n(%)',
                 xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical')
 # Subplot 4:Normal inversion compare result
-residual_normal_grid = ((rho_normal_grid - rho_grid)/rho_grid)*100
+residual_normal_grid = ((np.log10(rho_normal_grid) - np.log10(rho_grid))/np.log10(rho_grid))*100
 plot_residual_contour(ax4, grid, residual_normal_grid, 'Normal inversion compare result',mesh_x,mesh_y, **kw_compare)
-
+ax4.plot(pg.x(c2.nodes()),pg.y(c2.nodes()),'--k')
 # Subplot 6:Constrained inversion compare result
-residual_constrain_grid = ((rho_constrain_grid - rho_grid)/rho_grid)*100
+residual_constrain_grid = ((np.log10(rho_constrain_grid) - np.log10(rho_grid))/np.log10(rho_grid))*100
 plot_residual_contour(ax6, grid, residual_constrain_grid, 'Constrained inversion compare result',mesh_x,mesh_y, **kw_compare)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# %%
-# def generate_circle_points(radius=0.25, num_points=24):
-#     points = []
-#     angle_interval = 2 * np.pi / num_points
-
-#     for i in range(num_points):
-#         angle = angle_interval * i
-#         x = radius * np.cos(angle)
-#         y = radius * np.sin(angle)
-#         points.append((x, y))
-
-#     initial_point = (0, -radius)
-#     initial_angle = np.arctan2(initial_point[1], initial_point[0])
-
-#     rotated_points = []
-#     for x, y in points:
-#         rotated_x = x * np.cos(-initial_angle) - y * np.sin(-initial_angle)
-#         rotated_y = x * np.sin(-initial_angle) + y * np.cos(-initial_angle)
-#         rotated_points.append((round(rotated_x, 8), round(rotated_y, 8)))
-
-#     return np.array(rotated_points)
-
-# def find_closest_circle_points(target_points, circle_points):
-#     closest_points = []
-
-#     for target in target_points:
-#         distances = np.linalg.norm(circle_points[:, :2] - target[:2], axis=1)
-#         closest_index = np.argmin(distances)
-#         closest_points.append(circle_points[closest_index])
-
-#     return np.array(closest_points)
-
-# # Generate the 24 points on the circle
-# circle_points = generate_circle_points()
-
-# # Define the target points
-# target_points = np.array(scheme.sensors())
-
-# # Find the closest circle points
-# circle_points = find_closest_circle_points(target_points, circle_points)
-
-# print(circle_points)
-# # %%
-# scheme_circle = ert.DataContainer()
-# scheme_circle.setSensorPositions(circle_points)
-# scheme_circle['a'] = scheme['a']
-# scheme_circle['b'] = scheme['b']
-# scheme_circle['m'] = scheme['m']
-# scheme_circle['n'] = scheme['n']
-
-# plc_circle = mt.createPolygon(scheme_circle.sensors(), isClosed=True,
-#                        addNodes=3, interpolate='spline',boundaryMarker=-1)
-# geom_circle = plc_circle+ c2
-# mesh_fwd_circle = mt.createMesh(geom_circle, area=2e-5, smooth=[10, 1])
-# pg.show(mesh_fwd_circle,markers=True)
-# model_rho = np.array([100,10000])[mesh_fwd_circle.cellMarkers()-1]
-# data_sim_circle = ert.simulate(mesh_fwd_circle, scheme=scheme_circle, res=model_rho, noiseLevel=0.01,
-#                     noiseAbs=1e-6, seed=1337)
-
-# # %%
-# # ax, cb = ert.show(data_sim_circle, "rhoa", circular=True)
-# fig, ax = plt.subplots(figsize=(5,5))
-# ax.scatter(data_sim['rhoa'],data_sim_circle['rhoa'],s=1)
-# xticks = ax.get_xlim()
-# yticks = ax.get_ylim()
-# lim = 220
-# ax.plot([0,lim],[0,lim],'k-',linewidth=1, alpha=0.2)
-# ax.set_xlim([0,lim])
-# ax.set_ylim([0,lim])
+ax6.plot(pg.x(c2.nodes()),pg.y(c2.nodes()),'-k')

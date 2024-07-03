@@ -1,0 +1,52 @@
+;------ SIMULATION SETTINGS ------
+
+AGI Command File: C:\Users\Git\TARI_research\data\AGI\ERT2D\1_28_DDWSDGEG(63Min).cmd
+Number of Data = 2106
+Number of Electrodes = 28
+Number of Surface Electrodes = 28
+Number of IP Data = 0
+
+Processing starts at 2024-06-24 15:58:13
+
+;------ SETTINGS ------
+
+Minimum Voltage (mv) = 0.2
+Minimum V/I (ohm) = 0.0005
+Minimum apparent resistivity (ohm-m)  = 1
+Maximum apparent resistivity (ohm-m)  = 10000
+Maximum repeat error (%)  = 3
+Maximum reciprocal error (%)  = 5
+Remove negative apparent resistivity in ERT data: Yes
+Keep All Data (no data removal): No
+Inversion Method:  Forward modeling only
+Vertical axis:  Positive Upward
+Y Coordinate =  Depth
+Min electrode spacing X (m)  = 0.01
+Min electrode spacing Z (m)  = 0.01
+Forward Modeling Method:  Finite element method
+Forward system solver:  Cholesky decomposition method
+Boundary condition type:  Dirichlet
+Number cells or elements betwenn two electrodes = 2
+Lower-layer-thickness / Upper-layer-thickness =  1.1
+Depth of Inverted Model / Depth of Pseudosection =  1.1
+Max number of iteration of nonlinear inversion = 8
+Stop RMS error = 2%
+Mininum error reduction between two iterations = 5%
+Stop at Max number of iterations: Yes
+Stop when RMS is small enough: Yes
+Stop when RMS can not be reduced: Yes
+Res Data reweighting: No
+Use Reciprocal Error: No
+Stop when L2 norm is small enough: No
+Initial smoothness factor = 10
+Roughness conditioner = 0.2
+Starting model: pseudosection.
+Minimum resistivity =        1.0 ohm-m
+Maximum resistivity =    10000.0 ohm-m
+Number of elements combined horizontally = 1
+Number of elements combined verically = 1
+Vertical / Horizontal roughness ratio = 0.5
+Estimated noise of resistivity data  = 2%
+Initial damping factor of resistivity = 10
+Starting iteration of quasi Newton method = 20
+IP inversion method: No IP Inversion
