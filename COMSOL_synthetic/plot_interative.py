@@ -24,7 +24,7 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QImage
 import sys
 
-output_path = r'D:\R2MSDATA\TARI_E3_test\output_318_606_rep2'
+output_path = r'D:\R2MSDATA\TARI_E3_test\output_406_425second_inversion'
 def check_files_in_directory(directory_path):
     # 存儲解析出來的日期
     dates = []
@@ -45,9 +45,75 @@ def check_files_in_directory(directory_path):
     return dates
 
 dates_E3 = check_files_in_directory(output_path)
-# # read field data from pickle file
-with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\median_RHOA_E3.pkl', 'rb') as f:
-    median_rhoa_E3 = pickle.load(f)
+
+def load_inversion_results(save_ph):
+    output_ph = join(save_ph,'ERTManager')
+    para_domain = pg.load(join(output_ph,'resistivity-pd.bms'))
+    # mesh_fw = pg.load(join(output_ph,'resistivity-mesh.bms'))
+    # Load data file
+    data_path = join(output_ph,'data.dat')
+    data = ert.load(data_path)
+    investg_depth = (max(pg.x(data))-min(pg.x(data)))*0.2
+    # Load model response
+    # resp_path = join(output_ph,'model_response.txt')
+    # response = np.loadtxt(resp_path)
+    model = pg.load(join(output_ph,'resistivity.vector'))
+    coverage = pg.load(join(output_ph,'resistivity-cov.vector'))
+
+    inv_info_path = join(output_ph,'inv_info.txt')
+    Line = []
+    section_idx = 0
+    with open(inv_info_path, 'r') as read_obj:
+        for i,line in enumerate(read_obj):
+                Line.append(line.rstrip('\n'))
+
+    final_result = Line[Line.index('## Final result ##')+1:Line.index('## Inversion parameters ##')]
+    rrms = float(final_result[0].split(':')[1])
+    chi2 = float(final_result[1].split(':')[1])
+    inversion_para = Line[Line.index('## Inversion parameters ##')+1:Line.index('## Iteration ##')]
+    lam = int(inversion_para[0].split(':')[1])
+    iteration = Line[Line.index('## Iteration ##')+2:]
+    rrmsHistory = np.zeros(len(iteration))
+    chi2History = np.zeros(len(iteration))
+    for i in range(len(iteration)):
+        rrmsHistory[i] = float(iteration[i].split(',')[1])
+        chi2History[i] = float(iteration[i].split(',')[2])
+
+    mgr_dict = {'paraDomain': para_domain, 
+                # 'mesh_fw': mesh_fw, 
+                'data': data, 
+                # 'response': response, 
+                'model': model, 'coverage': coverage, 
+                'investg_depth': investg_depth, 
+                'rrms': rrms, 'chi2': chi2, 'lam': lam,
+                'rrmsHistory': rrmsHistory, 'chi2History': chi2History}
+
+    return mgr_dict
+
+
+pkl_ph = r'C:\Users\Git\TARI_research\COMSOL_synthetic'
+process_data = False
+if process_data:
+    output_folders = [f for f in sorted(listdir(output_path)) if isdir(join(output_path,f))]
+
+    median_rhoa_E3 = []
+    allall_mgrs = []
+
+    for i,output_folder_name in enumerate(output_folders):
+        print(output_folder_name)
+        data_path = join(output_path,output_folder_name,'ERTManager','inverison_data.ohm')
+        data = ert.load(data_path)
+        allall_mgrs.append(load_inversion_results(join(output_path,output_folder_name)))
+        median_rhoa_E3.append(np.median(data['rhoa']))
+
+
+    with open(join(pkl_ph,'median_rhoa_E3output_406_425second_inversion.pkl'), 'wb') as f:
+        pickle.dump(median_rhoa_E3, f)
+
+else:
+    # read field data from pickle file
+    with open(join(pkl_ph,'median_rhoa_E3output_406_425second_inversion.pkl'), 'rb') as f:
+        median_rhoa_E3 = pickle.load(f)
 
 # %%
     
@@ -75,15 +141,10 @@ def read_hydro_data(data_path):
 # # write to pickle file
 # with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'wb') as f:
 #     pickle.dump(daily_rainfall, f)
-# with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'rb') as f:
-#     daily_rainfall = pickle.load(f)
+with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'rb') as f:
+    daily_rainfall = pickle.load(f)
 # %%
 fig, ax = plt.subplots(figsize=(20, 7))
-# ax2 = ax.twinx()  # Create a second Y-axis sharing the same X-axis
-# ax2.bar(daily_rainfall.index, daily_rainfall, width=1, alpha=0.3, color='c', label='Rainfall')
-# ax2.set_ylabel('Rainfall (mm)', color='c')  # Set label for the secondary Y-axis
-# ax2.tick_params(axis='y', labelcolor='c')  # Set ticks color for the secondary Y-axis
-
 median_rhoa_plot, = ax.plot(dates_E3, median_rhoa_E3, 'ro-',markersize=3 )
 ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
 ax.xaxis.set_minor_locator(mdates.HourLocator(interval=6))
@@ -92,13 +153,19 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
 plt.xticks(rotation=45, ha='right', rotation_mode='anchor')
 plt.tight_layout()  # Adjust layout to make room for the rotated date labels
 
-begin_index = dates_E3.index(datetime(2024, 3, 18, 1, 0))
-end_index = dates_E3.index(datetime(2024, 6, 6, 21, 0))
+begin_index = 0#dates_E3.index(datetime(2024, 3, 18, 1, 0))
+end_index = -1#dates_E3.index(datetime(2024, 6, 6, 21, 0))
 ax.set_xlim(dates_E3[begin_index], dates_E3[end_index])
 ax.grid(True)
 ax.set_title('Median Apparent Resistivity of E3')
 ax.set_xlabel('Date')
 ax.set_ylabel('Apparent Resistivity ($\Omega m$)')
+
+ax2 = ax.twinx()  # Create a second Y-axis sharing the same X-axis
+ax2.bar(daily_rainfall.index, daily_rainfall, width=1, alpha=0.3, color='c', label='Rainfall')
+ax2.set_ylabel('Rainfall (mm)', color='c')  # Set label for the secondary Y-axis
+ax2.tick_params(axis='y', labelcolor='c')  # Set ticks color for the secondary Y-axis
+ax2.set_zorder(-100)  # Set the secondary Y-axis on bottom of the primary Y-axis
 
 # 使用 matplotlib.widgets.Cursor 來顯示游標
 cursor = Cursor(ax, useblit=True, color='gray', linewidth=1)
@@ -177,7 +244,7 @@ def onclick(event):
         x_click = event.xdata
         y_click = event.ydata
         # 設置一個合理的距離閾值
-        threshold_x = 0.1
+        threshold_x = 0.01
         threshold_y = 0.01
         for x, y in zip(mdates.date2num(dates_E3), median_rhoa_E3):
             if abs(x - x_click) < threshold_x and abs(y - y_click) < threshold_y:
@@ -196,7 +263,7 @@ def onclick(event):
                     xy=(x_click, y_click),
                     xytext=(20, 20),
                     textcoords="offset points",
-                    bbox=dict(boxstyle="round,pad=0.3", fc="lightblue", alpha=0.6),
+                    bbox=dict(boxstyle="round,pad=0.3", fc="lightyellow", alpha=0.6),
                     arrowprops=dict(arrowstyle="->")
                 )
                 click_annotation.set_visible(True)
@@ -223,49 +290,6 @@ def onclick(event):
 
                 break
 
-def load_inversion_results(save_ph):
-    output_ph = join(save_ph,'ERTManager')
-    para_domain = pg.load(join(output_ph,'resistivity-pd.bms'))
-    # mesh_fw = pg.load(join(output_ph,'resistivity-mesh.bms'))
-    # Load data file
-    data_path = join(output_ph,'data.dat')
-    data = ert.load(data_path)
-    investg_depth = (max(pg.x(data))-min(pg.x(data)))*0.2
-    # Load model response
-    # resp_path = join(output_ph,'model_response.txt')
-    # response = np.loadtxt(resp_path)
-    model = pg.load(join(output_ph,'resistivity.vector'))
-    coverage = pg.load(join(output_ph,'resistivity-cov.vector'))
-
-    inv_info_path = join(output_ph,'inv_info.txt')
-    Line = []
-    section_idx = 0
-    with open(inv_info_path, 'r') as read_obj:
-        for i,line in enumerate(read_obj):
-                Line.append(line.rstrip('\n'))
-
-    final_result = Line[Line.index('## Final result ##')+1:Line.index('## Inversion parameters ##')]
-    rrms = float(final_result[0].split(':')[1])
-    chi2 = float(final_result[1].split(':')[1])
-    inversion_para = Line[Line.index('## Inversion parameters ##')+1:Line.index('## Iteration ##')]
-    lam = int(inversion_para[0].split(':')[1])
-    iteration = Line[Line.index('## Iteration ##')+2:]
-    rrmsHistory = np.zeros(len(iteration))
-    chi2History = np.zeros(len(iteration))
-    for i in range(len(iteration)):
-        rrmsHistory[i] = float(iteration[i].split(',')[1])
-        chi2History[i] = float(iteration[i].split(',')[2])
-
-    mgr_dict = {'paraDomain': para_domain, 
-                # 'mesh_fw': mesh_fw, 
-                'data': data, 
-                # 'response': response, 
-                'model': model, 'coverage': coverage, 
-                'investg_depth': investg_depth, 
-                'rrms': rrms, 'chi2': chi2, 'lam': lam,
-                'rrmsHistory': rrmsHistory, 'chi2History': chi2History}
-
-    return mgr_dict
 
 def plot_inverted_profile(mgr, urf_file_name, **kw):
     data = mgr['data']
@@ -353,18 +377,38 @@ def plot_difference_contour(mgr1, mgr2, urf_file_name1, urf_file_name2,cmap):
     def blue_colormap():
         colors = [(0, 0, 1, i) for i in np.linspace(0, 1, 256)] 
         return LinearSegmentedColormap.from_list("blue_only", colors[::-1])
-    if cmap == 1:
-        kw_diff = dict(cMin=0, cMax=10,logScale=False,
-                label='Relative resistivity difference \n(%)',
-                xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap=red_colormap())
-    else:
-        kw_diff = dict(cMin=-10, cMax=0,logScale=False,
-                label='Relative resistivity difference \n(%)',
-                xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap=blue_colormap())
+    # if cmap == 1:
+    #     kw_diff = dict(cMin=0, cMax=10,logScale=False,
+    #             label='Relative resistivity difference \n(%)',
+    #             xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap=red_colormap())
+    # else:
+    #     kw_diff = dict(cMin=-10, cMax=0,logScale=False,
+    #             label='Relative resistivity difference \n(%)',
+    #             xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap=blue_colormap())
         
     # kw_diff = dict(cMin=-10, cMax=10,logScale=False,
     #             label='Relative resistivity difference \n(%)',
     #             xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap='bwr')
+    colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # 從白色到藍色的顏色組合
+    nodes = [0, 0.95, 1]  # 範圍從0到-1是白色，-1到-10是白色到藍色的漸變
+    custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))
+
+    kw_diff = dict(cMin=-5, cMax=0,logScale=False,
+                label='Relative resistivity difference \n(%)',
+                xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap=custom_cmap)
+    
+    # class StretchOutNormalize(plt.Normalize):
+    #     def __init__(self, vmin=None, vmax=None, low=None, up=None, clip=False):
+    #         self.low = low
+    #         self.up = up
+    #         plt.Normalize.__init__(self, vmin, vmax, clip)
+
+    #     def __call__(self, value, clip=None):
+    #         x, y = [self.vmin, self.low, self.up, self.vmax], [0, 0.5-1e-9, 0.5+1e-9, 1]
+    #         return np.ma.masked_array(np.interp(value, x, y))
+
+    # midnorm=StretchOutNormalize(vmin=kw_diff['cMin'], vmax=kw_diff['cMax'], low=-1)
+
     ax.contourf(X,Y, diff_grid, cmap=kw_diff['cMap'], levels=32,
                 vmin=kw_diff['cMin'],vmax=kw_diff['cMax'],antialiased=True)
     ax.set_aspect('equal')
