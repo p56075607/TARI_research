@@ -24,7 +24,7 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QImage
 import sys
 
-output_path = r'D:\R2MSDATA\TARI_E3_test\output_406_425second_inversion'
+output_path = r'D:\R2MSDATA\TARI_E3_test\output_second_timelapse_inveriosn'
 def check_files_in_directory(directory_path):
     # 存儲解析出來的日期
     dates = []
@@ -92,7 +92,7 @@ def load_inversion_results(save_ph):
 
 
 pkl_ph = r'C:\Users\Git\TARI_research\COMSOL_synthetic'
-process_data = False
+process_data =  False
 if process_data:
     output_folders = [f for f in sorted(listdir(output_path)) if isdir(join(output_path,f))]
 
@@ -107,12 +107,12 @@ if process_data:
         median_rhoa_E3.append(np.median(data['rhoa']))
 
 
-    with open(join(pkl_ph,'median_rhoa_E3output_406_425second_inversion.pkl'), 'wb') as f:
+    with open(join(pkl_ph,'median_rhoa_E3output_second_timelapse_inveriosn.pkl'), 'wb') as f:
         pickle.dump(median_rhoa_E3, f)
 
 else:
     # read field data from pickle file
-    with open(join(pkl_ph,'median_rhoa_E3output_406_425second_inversion.pkl'), 'rb') as f:
+    with open(join(pkl_ph,'median_rhoa_E3output_second_timelapse_inveriosn.pkl'), 'rb') as f:
         median_rhoa_E3 = pickle.load(f)
 
 # %%
@@ -127,7 +127,7 @@ def read_hydro_data(data_path):
     df.set_index('TIMESTAMP', inplace=True)
     df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors='coerce')
     # Resample the data to hourly averages
-    hourly_avg = df.resample('h').mean()
+    hourly_avg = df.resample('h').sum()
     if 'Rain(mm)' in hourly_avg.columns:
         # Summing the rain data to the daily rainfall
         daily_rainfall = hourly_avg['Rain(mm)'].resample('d').sum()
@@ -137,12 +137,20 @@ def read_hydro_data(data_path):
     else:
         return hourly_avg, None
     
-# _, daily_rainfall = read_hydro_data(r'C:\Users\Git\TARI_research\data\external\水文站資料彙整_20240731.xlsx')
+_, daily_rainfall = read_hydro_data(r'C:\Users\Git\TARI_research\data\external\水文站資料彙整_20240731.xlsx')
 # # write to pickle file
-# with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'wb') as f:
-#     pickle.dump(daily_rainfall, f)
+with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'wb') as f:
+    pickle.dump(daily_rainfall, f)
 with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'rb') as f:
     daily_rainfall = pickle.load(f)
+
+# %%
+# median_rhoa_df = pd.DataFrame({'Date': dates_E3, 'Median Apparent Resistivity': median_rhoa_E3})
+# print(median_rhoa_df)
+# median_rhoa_df.to_csv(r'C:\Users\Git\TARI_research\COMSOL_synthetic\median_rhoa_E3.csv', index=False)
+# daily_rainfall_df = pd.DataFrame({'Rainfall': daily_rainfall})
+# print(daily_rainfall_df)
+# daily_rainfall_df.to_csv(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.csv', index=True)
 # %%
 fig, ax = plt.subplots(figsize=(20, 7))
 median_rhoa_plot, = ax.plot(dates_E3, median_rhoa_E3, 'ro-',markersize=3 )
@@ -153,7 +161,7 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
 plt.xticks(rotation=45, ha='right', rotation_mode='anchor')
 plt.tight_layout()  # Adjust layout to make room for the rotated date labels
 
-begin_index = 0#dates_E3.index(datetime(2024, 3, 18, 1, 0))
+begin_index = 1#dates_E3.index(datetime(2024, 3, 18, 1, 0))
 end_index = -1#dates_E3.index(datetime(2024, 6, 6, 21, 0))
 ax.set_xlim(dates_E3[begin_index], dates_E3[end_index])
 ax.grid(True)
@@ -166,7 +174,7 @@ ax2.bar(daily_rainfall.index, daily_rainfall, width=1, alpha=0.3, color='c', lab
 ax2.set_ylabel('Rainfall (mm)', color='c')  # Set label for the secondary Y-axis
 ax2.tick_params(axis='y', labelcolor='c')  # Set ticks color for the secondary Y-axis
 ax2.set_zorder(-100)  # Set the secondary Y-axis on bottom of the primary Y-axis
-
+ax2.set_ylim([0,50])
 # 使用 matplotlib.widgets.Cursor 來顯示游標
 cursor = Cursor(ax, useblit=True, color='gray', linewidth=1)
 
@@ -432,7 +440,7 @@ def plot_difference_contour(mgr1, mgr2, urf_file_name1, urf_file_name2,cmap):
     title_str = 'Resistivity Difference Profile\n{} vs {}'.format(datetime.strptime(urf_file_name1[:8], "%y%m%d%H").strftime("%Y/%m/%d %H:00"),
                                                                   datetime.strptime(urf_file_name2[:8], "%y%m%d%H").strftime("%Y/%m/%d %H:00"))
     ax.set_title(title_str)
-    ax.set_xlabel(kw_diff['xlabel']+' max_abs:{:.2f}'.format(max(abs(one_line_diff))))
+    ax.set_xlabel(kw_diff['xlabel'])#+' max_abs:{:.2f}'.format(max(abs(one_line_diff))))
     ax.set_ylabel(kw_diff['ylabel'])
     ax.grid(linestyle='--', linewidth=0.5,alpha = 0.5)
 

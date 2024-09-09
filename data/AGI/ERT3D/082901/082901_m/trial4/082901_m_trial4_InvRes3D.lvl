@@ -1,0 +1,18 @@
+LVL2
+'Level Flags LColor LStyle LWidth FFGColor FBGColor FPattern FMode Alpha
+1.539927, 0, "R0 G0 B0", "Solid", 10, "R0 G0 B255", "White", "Solid", 2, 1.00
+2.371374, 0, "R0 G0 B0", "Solid", 10, "R0 G51 B255", "White", "Solid", 2, 1.00
+3.651741, 0, "R0 G0 B0", "Solid", 10, "R0 G102 B255", "White", "Solid", 2, 1.00
+5.623413, 0, "R0 G0 B0", "Solid", 10, "R0 G153 B255", "White", "Solid", 2, 1.00
+8.659643, 0, "R0 G0 B0", "Solid", 10, "R0 G204 B255", "White", "Solid", 2, 1.00
+13.335214, 0, "R0 G0 B0", "Solid", 10, "R0 G255 B255", "White", "Solid", 2, 1.00
+20.535250, 0, "R0 G0 B0", "Solid", 10, "R0 G255 B153", "White", "Solid", 2, 1.00
+31.622777, 0, "R0 G0 B0", "Solid", 10, "R0 G255 B51", "White", "Solid", 2, 1.00
+48.696753, 0, "R0 G0 B0", "Solid", 10, "R51 G255 B0", "White", "Solid", 2, 1.00
+74.989421, 0, "R0 G0 B0", "Solid", 10, "R153 G255 B0", "White", "Solid", 2, 1.00
+115.478198, 0, "R0 G0 B0", "Solid", 10, "R255 G255 B0", "White", "Solid", 2, 1.00
+177.827941, 0, "R0 G0 B0", "Solid", 10, "R255 G204 B0", "White", "Solid", 2, 1.00
+273.841963, 0, "R0 G0 B0", "Solid", 10, "R255 G153 B0", "White", "Solid", 2, 1.00
+421.696503, 0, "R0 G0 B0", "Solid", 10, "R255 G102 B0", "White", "Solid", 2, 1.00
+649.381632, 0, "R0 G0 B0", "Solid", 10, "R255 G51 B0", "White", "Solid", 2, 1.00
+1000.000000, 0, "R0 G0 B0", "Solid", 10, "R255 G0 B0", "White", "Solid", 2, 1.00

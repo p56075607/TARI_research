@@ -1,0 +1,34 @@
+LVL2
+'Level Flags LColor LStyle LWidth FFGColor FBGColor FPattern FMode Alpha
+11.547820, 0, "R0 G0 B0", "Solid", 10, "R0 G0 B255", "White", "Solid", 2, 1.00
+13.335214, 0, "R0 G0 B0", "Solid", 10, "R0 G25 B255", "White", "Solid", 2, 1.00
+15.399265, 0, "R0 G0 B0", "Solid", 10, "R0 G49 B255", "White", "Solid", 2, 1.00
+17.782794, 0, "R0 G0 B0", "Solid", 10, "R0 G74 B255", "White", "Solid", 2, 1.00
+20.535250, 0, "R0 G0 B0", "Solid", 10, "R0 G99 B255", "White", "Solid", 2, 1.00
+23.713737, 0, "R0 G0 B0", "Solid", 10, "R0 G123 B255", "White", "Solid", 2, 1.00
+27.384196, 0, "R0 G0 B0", "Solid", 10, "R0 G148 B255", "White", "Solid", 2, 1.00
+31.622777, 0, "R0 G0 B0", "Solid", 10, "R0 G173 B255", "White", "Solid", 2, 1.00
+36.517413, 0, "R0 G0 B0", "Solid", 10, "R0 G197 B255", "White", "Solid", 2, 1.00
+42.169650, 0, "R0 G0 B0", "Solid", 10, "R0 G222 B255", "White", "Solid", 2, 1.00
+48.696753, 0, "R0 G0 B0", "Solid", 10, "R0 G247 B255", "White", "Solid", 2, 1.00
+56.234133, 0, "R0 G0 B0", "Solid", 10, "R0 G255 B222", "White", "Solid", 2, 1.00
+64.938163, 0, "R0 G0 B0", "Solid", 10, "R0 G255 B173", "White", "Solid", 2, 1.00
+74.989421, 0, "R0 G0 B0", "Solid", 10, "R0 G255 B123", "White", "Solid", 2, 1.00
+86.596432, 0, "R0 G0 B0", "Solid", 10, "R0 G255 B74", "White", "Solid", 2, 1.00
+100.000000, 0, "R0 G0 B0", "Solid", 10, "R0 G255 B25", "White", "Solid", 2, 1.00
+115.478198, 0, "R0 G0 B0", "Solid", 10, "R25 G255 B0", "White", "Solid", 2, 1.00
+133.352143, 0, "R0 G0 B0", "Solid", 10, "R74 G255 B0", "White", "Solid", 2, 1.00
+153.992653, 0, "R0 G0 B0", "Solid", 10, "R123 G255 B0", "White", "Solid", 2, 1.00
+177.827941, 0, "R0 G0 B0", "Solid", 10, "R173 G255 B0", "White", "Solid", 2, 1.00
+205.352503, 0, "R0 G0 B0", "Solid", 10, "R222 G255 B0", "White", "Solid", 2, 1.00
+237.137371, 0, "R0 G0 B0", "Solid", 10, "R255 G247 B0", "White", "Solid", 2, 1.00
+273.841963, 0, "R0 G0 B0", "Solid", 10, "R255 G222 B0", "White", "Solid", 2, 1.00
+316.227766, 0, "R0 G0 B0", "Solid", 10, "R255 G197 B0", "White", "Solid", 2, 1.00
+365.174127, 0, "R0 G0 B0", "Solid", 10, "R255 G173 B0", "White", "Solid", 2, 1.00
+421.696503, 0, "R0 G0 B0", "Solid", 10, "R255 G148 B0", "White", "Solid", 2, 1.00
+486.967525, 0, "R0 G0 B0", "Solid", 10, "R255 G123 B0", "White", "Solid", 2, 1.00
+562.341325, 0, "R0 G0 B0", "Solid", 10, "R255 G99 B0", "White", "Solid", 2, 1.00
+649.381632, 0, "R0 G0 B0", "Solid", 10, "R255 G74 B0", "White", "Solid", 2, 1.00
+749.894209, 0, "R0 G0 B0", "Solid", 10, "R255 G49 B0", "White", "Solid", 2, 1.00
+865.964323, 0, "R0 G0 B0", "Solid", 10, "R255 G25 B0", "White", "Solid", 2, 1.00
+1000.000000, 0, "R0 G0 B0", "Solid", 10, "R255 G0 B0", "White", "Solid", 2, 1.00
