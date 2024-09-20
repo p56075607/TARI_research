@@ -13,6 +13,9 @@ print(scheme)
 # %%
 plc = mt.createPolygon(scheme.sensors(), isClosed=True,
                        addNodes=3, interpolate='spline',boundaryMarker=-1)
+c3 = mt.createCircle(pos=(0.0, 0.0), radius=0.1, segments=100, marker=1)
+mesh_constrain = mt.createMesh(plc+c3, quality=34.3, area=8e-5, smooth=[10, 1])
+print(mesh_constrain)
 
 mesh = mt.createMesh(plc, quality=34.3, area=8e-5, smooth=[10, 1])
 print(mesh)
@@ -22,7 +25,7 @@ for i, s in enumerate(scheme.sensors()):
 
 c2 = mt.createCircle(pos=(0.0, 0.0), radius=0.1, segments=100, marker=2)
 geom = plc+ c2
-mesh_fwd = mt.createMesh(geom, area=2e-5, smooth=[10, 1])
+mesh_fwd = mt.createMesh(geom, area=8e-5, smooth=[10, 1])
 pg.show(mesh_fwd,markers=True)
 # %%
 kw = dict(cMin=100, cMax=10000, cMap='jet', logScale=True, label='Resistivity ($\Omega$m)')
@@ -39,9 +42,7 @@ mgr.invert(mesh=mesh, verbose=True)
 
 
 # %%
-c3 = mt.createCircle(pos=(0.0, 0.0), radius=0.1, segments=100, marker=1)
-mesh_constrain = mt.createMesh(plc+c3, quality=34.3, area=8e-5, smooth=[10, 1])
-print(mesh_constrain)
+
 ax, _ = pg.show(mesh_constrain,markers=True)
 for i, s in enumerate(scheme.sensors()):
     ax.text(s.x(), s.y(), str(i+1), zorder=100)

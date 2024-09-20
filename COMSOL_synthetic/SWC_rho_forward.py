@@ -120,7 +120,7 @@ def read_and_process_csv(file_path,data):
 
     return time_points, median_rhoa
 output_path = r'D:\R2MSDATA\TARI_E3_test\output_second_timelapse_inveriosn'
-process_data = True
+process_data = False
 if process_data:
     case_name = ['4m','05m','6m','8m']
     for i in range(len(case_name)):
@@ -152,6 +152,8 @@ if process_data:
 
     # with open('median_rhoa_E3.pkl', 'wb') as f:
     #     pickle.dump(median_rhoa_E3, f)
+
+time_points, median_rhoa_5E6 = read_and_process_csv(file_path = join(pkl_ph,'2m','WaterContent_Ks_5E-6.csv'),data = data_filtered)
 # %%
 def check_files_in_directory(directory_path):
     # 存儲解析出來的日期
@@ -200,7 +202,7 @@ def plot_real_rhoa(begin_index,end_index):
     time_segment = dates_E3[begin_index:end_index]
     time_diffs_in_hours = [(time - time_segment[0]).total_seconds() / 3600 for time in time_segment]
     rhoa_diffs = [(rhoa - median_rhoa_E3[begin_index:end_index][0]) for rhoa in median_rhoa_E3[begin_index:end_index]]
-    obs_gray = ax.plot(time_diffs_in_hours, rhoa_diffs, marker='.', linestyle='-',label='observed data: '+str(time_segment[0].date())+'~'+str(time_segment[-1].date()))
+    obs_gray = ax.plot(time_diffs_in_hours, rhoa_diffs, marker='.', linestyle='-',color='gray',alpha=0.2)#,label='observed data: '+str(time_segment[0].date())+'~'+str(time_segment[-1].date()))
     return time_diffs_in_hours, rhoa_diffs
 # # begin_index = dates_E3.index(datetime(2024, 3, 18, 13, 0))
 # # end_index = dates_E3.index(datetime(2024, 3, 20, 3, 0))
@@ -308,13 +310,14 @@ for j in range(len(all_time)):
 # ax.plot(time_values, [(rhoa - median_rhoa_5[0]) for rhoa in median_rhoa_5],color='b', marker='o', linestyle='-', label='Comsol modeling result: Ks=1e-5 (m/s)')
 # ax.plot(time_values, [(rhoa - median_rhoa_6[0]) for rhoa in median_rhoa_6],color='r', marker='o', linestyle='-', label='Comsol modeling result: Ks=1e-6 (m/s)')
 # ax.plot(time_values, [(rhoa - median_rhoa_7[0]) for rhoa in median_rhoa_7],color='k', marker='o', linestyle='-', label='Comsol modeling result: Ks=1e-7 (m/s)')
-# case_name = ['2m','4m','6m','8m']
-# for i in range(len(case_name)):
-#     ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_5'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_5']], marker='x', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-5 (m/s)')
-#     ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_6'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_6']], marker='o', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-6 (m/s)')
-#     ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_7'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_7']], marker='+', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-7 (m/s)')
+case_name = ['2m','4m','6m','8m']
+for i in range(len(case_name)):
+    ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_5'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_5']],color='b', marker='x', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-5 (m/s)')
+    ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_6'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_6']],color='r', marker='o', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-6 (m/s)')
+    ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_7'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_7']],color='orange', marker='+', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-7 (m/s)')
 
-
+# plot 5E6
+# ax.plot(time_values, [(rhoa - median_rhoa_5E6[0]) for rhoa in median_rhoa_5E6], marker='s', linestyle='-',color='k',linewidth=3, label='Comsol result, Wet Depth= 2m, Ks=5e-6 (m/s)')
 ax.plot(all_time, mean_target, color='g', marker='v', linestyle='-',linewidth=3,markersize=10, label='Mean of observed data')
 
 ax.set_xlabel('Time after irrigation (hours)',fontsize=16)
@@ -328,15 +331,17 @@ ax.grid(True)
 plt.xticks(rotation=45)
 # Put a legend to the right of outside the current axis
 ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1), ncol=1)
-# from matplotlib.lines import Line2D
-# legend_elements = [Line2D([0], [0], color='gray', linestyle='-', marker='o', label='Observation data', alpha=0.5),
-#                    Line2D([0], [0], color='green', marker='v', label='Mean of observed data')]
+from matplotlib.lines import Line2D
+legend_elements = [Line2D([0], [0], color='gray', linestyle='-', marker='o', label='Observation data', alpha=0.5),
+                   Line2D([0], [0], color='green', marker='v', label='Mean of observed data'),
+                #    Line2D([0], [0], color='k', marker='s', label='Comsol result: 2m Ks=5e-6 (m/s)')
+                   ]
 # for i in range(len(case_name)):
-#     legend_elements.append(Line2D([0], [0], marker='o', label='Comsol modeling result: '+case_name[i]+' Ks=1e-5 (m/s)'))
-#     legend_elements.append(Line2D([0], [0], marker='o', label='Comsol modeling result: '+case_name[i]+' Ks=1e-6 (m/s)'))
-#     legend_elements.append(Line2D([0], [0], marker='o', label='Comsol modeling result: '+case_name[i]+' Ks=1e-7 (m/s)'))
+legend_elements.append(Line2D([0], [0], marker='x',color='b', label='Comsol modeling result: '+' Ks=1e-5 (m/s)'))
+legend_elements.append(Line2D([0], [0], marker='o',color='r', label='Comsol modeling result: '+' Ks=1e-6 (m/s)'))
+legend_elements.append(Line2D([0], [0], marker='+',color='orange', label='Comsol modeling result: '+' Ks=1e-7 (m/s)'))
 
-# plt.legend(handles=legend_elements,loc='upper right', bbox_to_anchor=(1.3, 1), ncol=1)
+plt.legend(handles=legend_elements,loc='upper right', bbox_to_anchor=(1.3, 1), ncol=1)
 ax.set_xlim(-6,99)
 plt.tight_layout(rect=[0, 0, 1, 1])  # 調整圖形布局
 fig.savefig(join(pkl_ph,'delta_rhoa_hydro_estimate.png'), dpi=300, bbox_inches='tight')

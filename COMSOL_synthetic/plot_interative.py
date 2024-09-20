@@ -11,6 +11,7 @@ matplotlib.use('TkAgg')  # 設置後端為 TkAgg
 import pickle
 import matplotlib.dates as mdates
 from datetime import datetime
+import os
 from os import listdir
 from os.path import isdir, join
 from matplotlib.widgets import Cursor
@@ -24,99 +25,27 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QImage
 import sys
 
-output_path = r'D:\R2MSDATA\TARI_E3_test\output_second_timelapse_inveriosn'
-def check_files_in_directory(directory_path):
-    # 存儲解析出來的日期
-    dates = []
-
-    # 遍歷資料夾中的所有檔案
-    for filename in sorted(listdir(directory_path)):
-        # 檢查檔案名稱是否符合特定格式
-        if filename.endswith('_m_E3'):
-            date_str = filename[:8]  # 提取日期部分
-            try:
-                # 轉換日期格式從 'YYMMDDHH' 到 datetime 對象
-                date = datetime.strptime(date_str, '%y%m%d%H')
-                dates.append(date)
-            except ValueError:
-                # 如果日期格式不正確，忽略此檔案
-                continue
-
-    return dates
-
-dates_E3 = check_files_in_directory(output_path)
-
-def load_inversion_results(save_ph):
-    output_ph = join(save_ph,'ERTManager')
-    para_domain = pg.load(join(output_ph,'resistivity-pd.bms'))
-    # mesh_fw = pg.load(join(output_ph,'resistivity-mesh.bms'))
-    # Load data file
-    data_path = join(output_ph,'data.dat')
-    data = ert.load(data_path)
-    investg_depth = (max(pg.x(data))-min(pg.x(data)))*0.2
-    # Load model response
-    # resp_path = join(output_ph,'model_response.txt')
-    # response = np.loadtxt(resp_path)
-    model = pg.load(join(output_ph,'resistivity.vector'))
-    coverage = pg.load(join(output_ph,'resistivity-cov.vector'))
-
-    inv_info_path = join(output_ph,'inv_info.txt')
-    Line = []
-    section_idx = 0
-    with open(inv_info_path, 'r') as read_obj:
-        for i,line in enumerate(read_obj):
-                Line.append(line.rstrip('\n'))
-
-    final_result = Line[Line.index('## Final result ##')+1:Line.index('## Inversion parameters ##')]
-    rrms = float(final_result[0].split(':')[1])
-    chi2 = float(final_result[1].split(':')[1])
-    inversion_para = Line[Line.index('## Inversion parameters ##')+1:Line.index('## Iteration ##')]
-    lam = int(inversion_para[0].split(':')[1])
-    iteration = Line[Line.index('## Iteration ##')+2:]
-    rrmsHistory = np.zeros(len(iteration))
-    chi2History = np.zeros(len(iteration))
-    for i in range(len(iteration)):
-        rrmsHistory[i] = float(iteration[i].split(',')[1])
-        chi2History[i] = float(iteration[i].split(',')[2])
-
-    mgr_dict = {'paraDomain': para_domain, 
-                # 'mesh_fw': mesh_fw, 
-                'data': data, 
-                # 'response': response, 
-                'model': model, 'coverage': coverage, 
-                'investg_depth': investg_depth, 
-                'rrms': rrms, 'chi2': chi2, 'lam': lam,
-                'rrmsHistory': rrmsHistory, 'chi2History': chi2History}
-
-    return mgr_dict
+linename='E3'
+pkl_path = r'D:\R2MSDATA\TARI_E3_test'
+output_path = join(pkl_path,'output_second_timelapse_inveriosn')
+pkl_files = [f for f in listdir(pkl_path) if f.endswith('.pkl')]
 
 
-pkl_ph = r'C:\Users\Git\TARI_research\COMSOL_synthetic'
-process_data =  False
-if process_data:
-    output_folders = [f for f in sorted(listdir(output_path)) if isdir(join(output_path,f))]
-
-    median_rhoa_E3 = []
-    allall_mgrs = []
-
-    for i,output_folder_name in enumerate(output_folders):
-        print(output_folder_name)
-        data_path = join(output_path,output_folder_name,'ERTManager','inverison_data.ohm')
-        data = ert.load(data_path)
-        allall_mgrs.append(load_inversion_results(join(output_path,output_folder_name)))
-        median_rhoa_E3.append(np.median(data['rhoa']))
-
-
-    with open(join(pkl_ph,'median_rhoa_E3output_second_timelapse_inveriosn.pkl'), 'wb') as f:
-        pickle.dump(median_rhoa_E3, f)
-
-else:
-    # read field data from pickle file
-    with open(join(pkl_ph,'median_rhoa_E3output_second_timelapse_inveriosn.pkl'), 'rb') as f:
-        median_rhoa_E3 = pickle.load(f)
+for i, pkl_file in enumerate(pkl_files):
+    with open(join(pkl_path, pkl_file), 'rb') as f:
+        if i == 0:
+            dates_E3 = pickle.load(f)
+            median_RHOA_E3 = pickle.load(f)
+        else:
+            dates_E3 += pickle.load(f)
+            median_RHOA_E3 += pickle.load(f)
 
 # %%
-    
+# Save the dates and median_RHOA_E1 to a pickle file
+with open('median_RHOA_E3_and_date.pkl', 'wb') as f:
+    pickle.dump(dates_E3, f)
+    pickle.dump(median_RHOA_E3, f)
+# %%
 def read_hydro_data(data_path):
     df = pd.read_excel(data_path, sheet_name='彰化竹塘水田')
     # Pre-process and correct the TIMESTAMP column
@@ -137,12 +66,12 @@ def read_hydro_data(data_path):
     else:
         return hourly_avg, None
     
-_, daily_rainfall = read_hydro_data(r'C:\Users\Git\TARI_research\data\external\水文站資料彙整_20240731.xlsx')
-# # write to pickle file
-with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'wb') as f:
-    pickle.dump(daily_rainfall, f)
-with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'rb') as f:
-    daily_rainfall = pickle.load(f)
+_, daily_rainfall = read_hydro_data(r'C:\Users\Git\TARI_research\data\external\水文站資料彙整_20240909.xlsx')
+# # # write to pickle file
+# with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'wb') as f:
+#     pickle.dump(daily_rainfall, f)
+# with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'rb') as f:
+#     daily_rainfall = pickle.load(f)
 
 # %%
 # median_rhoa_df = pd.DataFrame({'Date': dates_E3, 'Median Apparent Resistivity': median_rhoa_E3})
@@ -152,30 +81,106 @@ with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'rb
 # print(daily_rainfall_df)
 # daily_rainfall_df.to_csv(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.csv', index=True)
 # %%
-fig, ax = plt.subplots(figsize=(20, 7))
-median_rhoa_plot, = ax.plot(dates_E3, median_rhoa_E3, 'ro-',markersize=3 )
-ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
-ax.xaxis.set_minor_locator(mdates.HourLocator(interval=6))
+fig, ax = plt.subplots(figsize=(25, 8))
+median_rhoa_plot, = ax.plot(dates_E3, median_RHOA_E3, 'ro',markersize=3 ,zorder=2)
+ax.xaxis.set_major_locator(mdates.DayLocator(interval=7))
+ax.xaxis.set_minor_locator(mdates.DayLocator(interval=1))
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-# Rotate dates for better readability
-plt.xticks(rotation=45, ha='right', rotation_mode='anchor')
+# set xy ticks label fontsize 
+fz_minor = 25
+plt.xticks(fontsize=fz_minor,rotation=45, ha='right', rotation_mode='anchor')
+plt.yticks(fontsize=fz_minor)
+ax.tick_params(axis='both', which='major', length=10,width=3, direction='in')
+ax.tick_params(axis='both', which='minor', length=5,width=1.5, direction='in')
 plt.tight_layout()  # Adjust layout to make room for the rotated date labels
 
 begin_index = 1#dates_E3.index(datetime(2024, 3, 18, 1, 0))
 end_index = -1#dates_E3.index(datetime(2024, 6, 6, 21, 0))
 ax.set_xlim(dates_E3[begin_index], dates_E3[end_index])
-ax.grid(True)
-ax.set_title('Median Apparent Resistivity of E3')
-ax.set_xlabel('Date')
-ax.set_ylabel('Apparent Resistivity ($\Omega m$)')
+ax.grid(True, which='major', linestyle='--', linewidth=0.5)
+fz_major = 30
+# ax.set_title('Median Apparent Resistivity',fontsize=fz_major,fontweight='bold')
+ax.set_xlabel('Date',fontsize=fz_major)
+ax.set_ylabel('Apparent Resistivity ($\Omega m$)',fontsize=fz_major)
+
+# instrument events: 4/6, 4/26, 5/1, 7/25, 7/29
+# instrument_events = [datetime(2024, 4, 6, 0, 0), datetime(2024, 4, 26, 0, 0), datetime(2024, 5, 1, 0, 0), datetime(2024, 7, 25, 0, 0), datetime(2024, 7, 29, 0, 0)]
+# for event in instrument_events:
+#     ax.axvline(event, color='k', linestyle='-', linewidth=3)
+
+# irregration events: 
+irregration_events = [datetime(2024, 3, 18, 13, 0),
+                      datetime(2024, 3, 21, 13, 0),
+                      datetime(2024, 3, 26, 11, 0),
+                        datetime(2024, 3, 27, 13, 0),
+                      datetime(2024, 3, 28, 13, 0),
+                      datetime(2024, 3, 29, 13, 0),
+                      datetime(2024, 3, 30, 15, 0),
+                      datetime(2024, 4, 1, 11, 0),
+                      datetime(2024, 4, 8, 11, 0),
+                      datetime(2024, 4, 15, 13, 0),
+                      datetime(2024, 4, 17, 11, 0),
+                      datetime(2024, 4, 18, 13, 0),
+                      datetime(2024, 5, 7, 15, 0),
+                      datetime(2024, 5, 10, 13, 0),
+                      datetime(2024, 5, 13, 23, 0),
+                      datetime(2024, 5, 16, 19, 0),
+                      datetime(2024, 5, 19, 15, 0),
+                      datetime(2024, 5, 21, 21, 0),
+                      datetime(2024, 5, 24, 15, 0),
+                      datetime(2024, 5, 26, 19, 0),
+                      datetime(2024, 5, 29, 11, 0),
+                      datetime(2024, 6, 2, 19, 0),
+                      datetime(2024, 6, 8, 21, 0),
+                      datetime(2024, 6, 15,13, 0),
+                      datetime(2024, 6, 20,11, 0),
+                      datetime(2024, 6, 25,23, 0),
+                      datetime(2024, 7, 13,11, 0),
+                      datetime(2024, 7, 14,13, 0),
+                      datetime(2024, 7, 17,13, 0),
+                    datetime(2024, 7, 20, 13, 0),
+                        datetime(2024, 7, 21, 11, 0),
+                        datetime(2024, 7, 22, 11, 0),
+                        datetime(2024, 7, 23, 11, 0),
+                        datetime(2024, 7, 30, 11, 0),
+                        datetime(2024, 8, 1, 15, 0),
+                        datetime(2024, 8, 3, 11, 0),
+                        datetime(2024, 8, 4, 15 ,0),
+                        datetime(2024, 8, 10, 11, 0),
+                        datetime(2024, 8, 11, 17, 0),
+                        datetime(2024, 8, 13, 11, 0),
+                        datetime(2024, 8, 15, 15, 0),
+                        datetime(2024, 8, 19, 3, 0),
+                        datetime(2024, 8, 20, 15, 0),
+                        datetime(2024, 8, 21, 15, 0),
+                        datetime(2024, 8, 22, 11, 0),
+                        datetime(2024, 8, 23, 11, 0),
+                        datetime(2024, 8, 24, 11, 0),
+                        datetime(2024, 8, 26, 17, 0),
+                        datetime(2024, 8, 29, 17, 0),
+                      ]
+for event in irregration_events:
+    ax.axvline(event, color='g', linestyle='-', linewidth=3)
+
+
 
 ax2 = ax.twinx()  # Create a second Y-axis sharing the same X-axis
-ax2.bar(daily_rainfall.index, daily_rainfall, width=1, alpha=0.3, color='c', label='Rainfall')
-ax2.set_ylabel('Rainfall (mm)', color='c')  # Set label for the secondary Y-axis
-ax2.tick_params(axis='y', labelcolor='c')  # Set ticks color for the secondary Y-axis
-ax2.set_zorder(-100)  # Set the secondary Y-axis on bottom of the primary Y-axis
-ax2.set_ylim([0,50])
-# 使用 matplotlib.widgets.Cursor 來顯示游標
+ax2.bar(daily_rainfall.index, daily_rainfall, width=1,align='edge', alpha=1,color=[0.3010, 0.7450, 0.9330], label='Rainfall',zorder=1)
+ax2.set_ylabel('Rainfall (mm/day)', color=[0.3010, 0.7450, 0.9330],fontsize=fz_major)  # Set label for the secondary Y-axis
+ax2.tick_params(axis='y', labelcolor=[0.3010, 0.7450, 0.9330], length=10,width=3, direction='in')  # Set ticks color for the secondary Y-axis
+# set y ticks label fontsize
+plt.yticks(fontsize=fz_minor)
+# ax2.set_ylim([0,50])
+ax.set_zorder(ax2.get_zorder()+1)
+ax.set_frame_on(False)
+width = 3
+ax2.spines['top'].set_linewidth(width)
+ax2.spines['right'].set_linewidth(width)
+ax2.spines['bottom'].set_linewidth(width)
+ax2.spines['left'].set_linewidth(width)
+
+fig.savefig('TARI_E3_timeseries.png', dpi=300, bbox_inches='tight')
+#%% 使用 matplotlib.widgets.Cursor 來顯示游標
 cursor = Cursor(ax, useblit=True, color='gray', linewidth=1)
 
 app = QApplication(sys.argv)
@@ -245,6 +250,50 @@ def on_scroll(event):
 
 fig.canvas.mpl_connect('scroll_event', on_scroll)
 
+def load_inversion_results(save_ph):
+    output_ph = join(save_ph,'ERTManager')
+    para_domain = pg.load(join(output_ph,'resistivity-pd.bms'))
+    # mesh_fw = pg.load(join(output_ph,'resistivity-mesh.bms'))
+    # Load data file
+    data_path = join(output_ph,'data.dat')
+    data = ert.load(data_path)
+    investg_depth = (max(pg.x(data))-min(pg.x(data)))*0.2
+    # Load model response
+    # resp_path = join(output_ph,'model_response.txt')
+    # response = np.loadtxt(resp_path)
+    model = pg.load(join(output_ph,'resistivity.vector'))
+    coverage = pg.load(join(output_ph,'resistivity-cov.vector'))
+
+    inv_info_path = join(output_ph,'inv_info.txt')
+    Line = []
+    section_idx = 0
+    with open(inv_info_path, 'r') as read_obj:
+        for i,line in enumerate(read_obj):
+                Line.append(line.rstrip('\n'))
+
+    final_result = Line[Line.index('## Final result ##')+1:Line.index('## Inversion parameters ##')]
+    rrms = float(final_result[0].split(':')[1])
+    chi2 = float(final_result[1].split(':')[1])
+    inversion_para = Line[Line.index('## Inversion parameters ##')+1:Line.index('## Iteration ##')]
+    lam = int(inversion_para[0].split(':')[1])
+    iteration = Line[Line.index('## Iteration ##')+2:]
+    rrmsHistory = np.zeros(len(iteration))
+    chi2History = np.zeros(len(iteration))
+    for i in range(len(iteration)):
+        rrmsHistory[i] = float(iteration[i].split(',')[1])
+        chi2History[i] = float(iteration[i].split(',')[2])
+
+    mgr_dict = {'paraDomain': para_domain, 
+                # 'mesh_fw': mesh_fw, 
+                'data': data, 
+                # 'response': response, 
+                'model': model, 'coverage': coverage, 
+                'investg_depth': investg_depth, 
+                'rrms': rrms, 'chi2': chi2, 'lam': lam,
+                'rrmsHistory': rrmsHistory, 'chi2History': chi2History}
+
+    return mgr_dict
+
 def onclick(event):
     if event.inaxes == ax:  # 確保點擊發生在 ax 上
         if plt.get_current_fig_manager().toolbar.mode != '':
@@ -252,9 +301,9 @@ def onclick(event):
         x_click = event.xdata
         y_click = event.ydata
         # 設置一個合理的距離閾值
-        threshold_x = 0.01
-        threshold_y = 0.01
-        for x, y in zip(mdates.date2num(dates_E3), median_rhoa_E3):
+        threshold_x = 0.1
+        threshold_y = 0.1
+        for x, y in zip(mdates.date2num(dates_E3), median_RHOA_E3):
             if abs(x - x_click) < threshold_x and abs(y - y_click) < threshold_y:
 
                 if len(selected_points)%2 == 0:
@@ -498,3 +547,229 @@ plt.show()  # 顯示圖形
 print("All selected points:")
 for point in selected_points:
     print(f'x = {point[0]}, y = {point[1]:.2f}')
+
+# %%
+# %%
+# Plot time lapse resistivity different profile with for loop
+def plot_difference_contour(mgr1, mgr2, urf_file_name1, urf_file_name2,save_folder, **kw_diff):
+    model1 = mgr1['model']
+    model2 = mgr2['model']
+    data = mgr1['data']
+    left = min(pg.x(data))
+    right = max(pg.x(data))
+    depth = mgr1['investg_depth']
+    mesh_x = np.linspace(left, right, 250)
+    mesh_y = np.linspace(-depth, 0, 150)
+    grid = pg.createGrid(x=mesh_x, y= mesh_y)
+    X,Y = np.meshgrid(mesh_x, mesh_y)
+    one_line_diff = (np.log10(model2) - np.log10(model1))/np.log10(model1)*100
+    diff_grid = np.reshape(pg.interpolate(mgr1['paraDomain'], one_line_diff, grid.positions()), (len(mesh_y), len(mesh_x)))
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.contourf(X,Y, diff_grid, cmap=kw_diff['cMap'], levels=32,
+                vmin=kw_diff['cMin'],vmax=kw_diff['cMax'],antialiased=True)
+    ax.set_aspect('equal')
+    ax.set_xlim(left, right)
+    ax.set_ylim(-depth, 0)
+    ax.yaxis.set_major_locator(plt.MultipleLocator(5))
+    ax.yaxis.set_minor_locator(plt.MultipleLocator(1))
+    triangle_left = np.array([[left, -depth], [depth, -depth], [left,0], [left, -depth]])
+    triangle_right = np.array([[right, -depth], [right-depth, -depth], [right,0], [right, depth]])
+    ax.add_patch(plt.Polygon(triangle_left,color='white'))
+    ax.add_patch(plt.Polygon(triangle_right,color='white'))
+    divider = make_axes_locatable(ax)
+    cbaxes = divider.append_axes("right", size="4.5%", pad=.1)
+    m = plt.cm.ScalarMappable(cmap=kw_diff['cMap'])
+    m.set_array(diff_grid)
+    m.set_clim(kw['cMin'],kw['cMax'])
+    cb = plt.colorbar(m, boundaries=np.linspace(kw['cMin'],kw['cMax'], 50),cax=cbaxes)
+    cb.ax.set_yticks(np.linspace(kw['cMin'],kw['cMax'],5))
+    cb.ax.set_yticklabels(['{:.2f}'.format(x) for x in cb.ax.get_yticks()])
+    cb.ax.set_ylabel(kw['label'])
+    title_str = 'Resistivity Difference Profile\n{} vs {}'.format(datetime.strptime(urf_file_name1[:8], "%y%m%d%H").strftime("%Y/%m/%d %H:00"),
+                                                                  datetime.strptime(urf_file_name2[:8], "%y%m%d%H").strftime("%Y/%m/%d %H:00"))
+    ax.set_title(title_str)
+    ax.set_xlabel(kw['xlabel'])#+' max_abs:{:.2f}'.format(max(abs(one_line_diff))))
+    ax.set_ylabel(kw['ylabel'])
+    ax.grid(linestyle='--', linewidth=0.5,alpha = 0.5)
+    fig.savefig(join(save_folder, urf_file_name1[:8]+'_vs_'+urf_file_name2[:8]+'_contour.png'), dpi=300, bbox_inches='tight')
+    plt.close()
+
+    return X,Y, diff_grid
+
+all_mgrs = []
+output_folders = [f for f in sorted(listdir(output_path)) if isdir(join(output_path,f))]
+begin_index = dates_E3.index(datetime(2024, 4, 14, 3, 0))
+end_index = dates_E3.index(datetime(2024, 4, 18, 3, 0))
+save_ph = join(output_path,output_folders[begin_index])
+all_mgrs.append(load_inversion_results(save_ph))
+
+current_index = 44
+colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # 從白色到藍色的顏色組合
+nodes = [0, 0.9, 1]  # 範圍從0到-1是白色，-1到-10是白色到藍色的漸變
+custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))
+
+kw = dict(cMin=-5, cMax=0,logScale=False,
+            label='Relative resistivity difference \n(%)',
+            xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap=custom_cmap)
+
+
+save_folder = r'D:\R2MSDATA\TARI_E3_test\timelapsed_resistivity_difference'
+if not os.path.exists(save_folder):
+    # if not, create the folder
+    os.makedirs(save_folder)
+    print(f'Folder "{save_folder}" created.')
+else:
+    print(f'Folder "{save_folder}" already exists.')
+
+count = 1
+every_diff_grid = []
+for j in range(begin_index+1,end_index+1,1):
+    save_ph = join(output_path,output_folders[j])
+    all_mgrs.append(load_inversion_results(save_ph))
+    X,Y, diff_grid = plot_difference_contour(all_mgrs[0], all_mgrs[count], output_folders[begin_index], output_folders[j],save_folder, **kw)
+    every_diff_grid.append(diff_grid)
+    count += 1
+
+# %%
+begin_index = dates_E3.index(datetime(2024, 5, 28, 3, 0))
+end_index = dates_E3.index(datetime(2024, 5, 29, 11, 0))
+diff_mgrs = []
+for j in range(begin_index,end_index+1,1):
+    print(output_folders[j])
+    save_ph = join(output_path,output_folders[j])
+    diff_mgrs.append(load_inversion_results(save_ph))
+# %%
+# Plot intensity map
+# pick up X index from 18~19 m
+X_index = np.where((X[0] >= 30) & (X[0] <= 50))[0]
+mean_diff = np.empty((len(Y[:,0]),0))
+for i in range(len(every_diff_grid)):
+    data = every_diff_grid[i][:, X_index]
+    # Filter to include only negative values
+    neg_data = np.where(data < 0, data, np.nan)
+    # Compute mean of negative values along axis=1, ignoring NaNs
+    diff_1819 = np.nanmean(neg_data, axis=1)
+    # Reshape diff_1819 to 2D and append along axis=1
+    mean_diff = np.append(mean_diff, diff_1819[:, np.newaxis], axis=1)
+
+colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # 從白色到藍色的顏色組合
+nodes = [0, 0.95, 1]  # 範圍從0到-1是白色，-1到-10是白色到藍色的漸變
+custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))
+kw = dict(cMin=-4, cMax=0,logScale=False,
+            label='Relative resistivity difference \n(%)',
+            xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap=custom_cmap)
+
+Tmesh,Ymesh = np.meshgrid(dates_E3[begin_index:end_index],Y[:,0] )
+fig,ax = plt.subplots(figsize=(27.5,12))
+
+# pc = ax.pcolor(Tmesh,Ymesh,(mean_diff),cmap=custom_cmap,vmin=-5, vmax=0)
+levels = np.linspace(kw['cMin'], kw['cMax'], 32)  # Adjust the number of levels as needed
+
+pc = ax.contourf(Tmesh, Ymesh, (mean_diff), cmap=kw['cMap'], levels=levels, vmin=kw['cMin'], vmax=kw['cMax'],zorder=2)
+# ax.set_ylim([-8,0])
+ax.xaxis.set_major_locator(matplotlib.dates.DayLocator(interval=1))
+ax.xaxis.set_minor_locator(matplotlib.dates.HourLocator(interval=1))
+ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%m/%d'))
+fz_minor = 40
+plt.xticks(fontsize=fz_minor,fontweight='bold')
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+
+xticks = ax.get_xticks()
+xticklabels = ax.get_xticklabels()
+ax.set_xticks(xticks)
+ax.tick_params(axis='both', which='major', length=10,width=3)
+ax.tick_params(axis='both', which='minor', length=5,width=1.5)
+plt.draw()
+fz_major = fz_minor
+ax.set_xticklabels(xticklabels,rotation = 45, ha='right',rotation_mode="anchor")
+ax.grid(linestyle='--',color='w',linewidth=0.5)
+ax.set_ylabel('Depth (m)',fontsize=fz_major,fontweight='bold')
+ax.set_xlabel('Date (2024/mm/dd)',fontsize=fz_major,fontweight='bold')
+# divider = make_axes_locatable(ax)
+# cbaxes = divider.append_axes("right", size="4.5%", pad=10)
+# m = plt.cm.ScalarMappable(cmap=kw['cMap'])
+# m.set_array(mean_diff)
+# m.set_clim(kw['cMin'],kw['cMax'])
+# cb = plt.colorbar(m, boundaries=np.linspace(kw['cMin'],kw['cMax'], 50),cax=cbaxes)
+
+cb = fig.colorbar(pc, pad=0.08)
+cb.ax.set_yticks(np.linspace(kw['cMin'],kw['cMax'],6))
+cb.ax.set_ylabel(kw['label'],fontsize=fz_major,fontweight='bold')
+cb.ax.yaxis.set_tick_params(labelsize=fz_minor)
+for label in cb.ax.yaxis.get_ticklabels():
+    label.set_fontweight('bold')
+
+
+title_str = 'Spacial & Temporal Intensity Plot of the '+kw['label'][:-5]
+ax.set_title(title_str,fontsize=fz_major,fontweight='bold')
+width = 3
+ax.spines['top'].set_linewidth(width)
+ax.spines['right'].set_linewidth(width)
+ax.spines['bottom'].set_linewidth(width)
+ax.spines['left'].set_linewidth(width)
+
+ax2 = ax.twinx()
+ax2.bar(daily_rainfall.index, daily_rainfall, width=1,align='edge', alpha=1,color=[0.3010, 0.7450, 0.9330], label='Rainfall',zorder=1)
+ax2.set_ylabel('Rainfall (mm/day)', color=[0.3010, 0.7450, 0.9330],fontsize=fz_major,fontweight='bold')  # Set label for the secondary Y-axis
+ax2.tick_params(axis='y', labelcolor=[0.3010, 0.7450, 0.9330], length=10,width=3)  # Set ticks color for the secondary Y-axis
+ax2.set_xlim(dates_E3[begin_index], dates_E3[end_index])
+ax2.yaxis.set_tick_params(labelsize=fz_minor)
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+plt.show()
+fig.savefig(join(save_folder, 'E3_intensity.png'), dpi=300, bbox_inches='tight')
+
+# %%
+# %%
+# Plot time series resistivity
+def plot_timeseries(median_RHOA, daily_rainfall, dates, begin_index, end_index,current_index):
+    fig, ax = plt.subplots(figsize=(30, 10))
+    median_rhoa_plot, = ax.plot(dates[begin_index:end_index], median_RHOA[begin_index:end_index], 'ko',markersize=15 ,zorder=2)
+    ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+    ax.xaxis.set_minor_locator(mdates.HourLocator(interval=1))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
+    # set xy ticks label fontsize 
+    fz_minor = 50
+    plt.xticks(fontsize=fz_minor,rotation=45, ha='right', rotation_mode='anchor',fontweight='bold')
+    plt.yticks(fontsize=fz_minor,fontweight='bold')
+    ax.tick_params(axis='both', which='major', length=10,width=3, direction='in')
+    ax.tick_params(axis='both', which='minor', length=5,width=1.5, direction='in')
+    plt.tight_layout()  # Adjust layout to make room for the rotated date labels
+
+    # xy lim have some space
+    # 6 hours before and after
+    ax.set_xlim(dates[begin_index] - timedelta(hours=6), dates[end_index] + timedelta(hours=6))
+    # 10% of the range above and below the data
+    ax.set_ylim([min(median_RHOA[begin_index:end_index]) - 0.1 * (max(median_RHOA[begin_index:end_index]) - min(median_RHOA[begin_index:end_index])),
+                 max(median_RHOA[begin_index:end_index]) + 0.1 * (max(median_RHOA[begin_index:end_index]) - min(median_RHOA[begin_index:end_index]))])
+    ax.grid(True, which='major', linestyle='--', linewidth=0.5)
+    fz_major = 50
+    # ax.set_title('Median Apparent Resistivity',fontsize=fz_major,fontweight='bold')
+    ax.set_xlabel('Date (2024/mm/dd)',fontsize=fz_major,fontweight='bold')
+    ax.set_ylabel('Apparent Resistivity ($\Omega m$)',fontsize=fz_major,fontweight='bold')
+    ax2 = ax.twinx()  # Create a second Y-axis sharing the same X-axis
+    ax2.bar(daily_rainfall.index, daily_rainfall, width=1,align='edge', alpha=1,color=[0.3010, 0.7450, 0.9330], label='Rainfall',zorder=1)
+    ax2.set_ylabel('Rainfall (mm/day)', color=[0.3010, 0.7450, 0.9330],fontsize=fz_major,fontweight='bold')  # Set label for the secondary Y-axis
+    ax2.tick_params(axis='y', labelcolor=[0.3010, 0.7450, 0.9330], length=10,width=3, direction='in')  # Set ticks color for the secondary Y-axis
+    # set y ticks label fontsize
+    plt.yticks(fontsize=fz_minor,fontweight='bold')
+    # ax2.set_ylim([0,50])
+    ax.set_zorder(ax2.get_zorder()+1)
+    ax.set_frame_on(False)
+    width = 3
+    ax2.spines['top'].set_linewidth(width)
+    ax2.spines['right'].set_linewidth(width)
+    ax2.spines['bottom'].set_linewidth(width)
+    ax2.spines['left'].set_linewidth(width)
+
+    fig.savefig(join(save_folder,'TARI_E3_timeseries.png'), dpi=300, bbox_inches='tight')
+
+
+output_folders = [f for f in sorted(listdir(output_path)) if isdir(join(output_path,f))]
+begin_index = dates_E3.index(datetime(2024, 4, 14, 3, 0))
+end_index = dates_E3.index(datetime(2024, 4, 18, 3, 0))
+current_index = 44
+save_folder = r'D:\R2MSDATA\TARI_E3_test\timelapsed_resistivity_difference'
+
+plot_timeseries(median_RHOA_E3, daily_rainfall, dates_E3, begin_index-2, end_index,current_index)
+# %%
+print((datetime(2024, 4, 17, 3, 0)-datetime(2024, 4,14,3, 0)).total_seconds()/3600)
