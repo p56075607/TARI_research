@@ -44,6 +44,20 @@ for i, pkl_file in enumerate(pkl_files):
 with open('median_RHOA_E2_and_date.pkl', 'wb') as f:
     pickle.dump(dates_E2, f)
     pickle.dump(median_RHOA_E2, f)
+
+# %%
+# read the dates and median_RHOA_E1 from the pickle file
+with open('median_RHOA_E2_and_date.pkl', 'rb') as f:
+    pickled_dates_E2 = pickle.load(f)
+    pickled_median_RHOA_E2 = pickle.load(f)
+
+# %%
+# To pandas DataFrame
+dates_E2 = pd.to_datetime(pickled_dates_E2)
+median_RHOA_E2 = np.array(pickled_median_RHOA_E2)
+rhoa_df = pd.DataFrame({'Date': dates_E2, 'Median Apparent Resistivity': median_RHOA_E2})
+# output the rhoa_df to csv file
+rhoa_df.to_csv('median_rhoa_E2.csv', index=False)
 # %%
      
 import pandas as pd
@@ -268,7 +282,7 @@ def onclick(event):
                 clicked_annotations.append(click_annotation)
                 fig.canvas.draw_idle()
 
-                # date: 2024-03-18 01:00:00 to '24031801_m_E3'
+                # date: 2024-03-18 01:00:00 to '24031801_m_E2'
                 date_folder_names.append(selected_points[-1][0].replace('/','').replace(':','').replace(' ','') [2:-2]+'_m_'+linename)
                 save_ph = join(output_path,date_folder_names[-1])
                 all_mgrs.append(load_inversion_results(save_ph))
@@ -706,4 +720,4 @@ plot_timeseries(median_RHOA_E2, daily_rainfall, dates_E2, begin_index-2, end_ind
 
 # %%
 # %%
-print((datetime(2024, 7, 6, 21, 0)-datetime(2024, 7,2,7, 0)).total_seconds()/3600)
+print((datetime(2024, 7, 15, 21, 0)-datetime(2024, 7,2,7, 0)).total_seconds()/3600)

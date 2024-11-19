@@ -1,0 +1,12 @@
+## Final result ##
+rrms:9.50091980157059
+chi2:8.848888332353255
+## Inversion parameters ##
+use lam:100
+## Iteration ##
+Iter.  rrms  chi2
+0,49.87,186.96
+1,17.56,27.15
+2,11.19,12.11
+3,9.55,8.86
+4,9.50,8.85

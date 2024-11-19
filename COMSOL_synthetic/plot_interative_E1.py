@@ -46,6 +46,19 @@ with open('median_RHOA_E1_and_date.pkl', 'wb') as f:
     pickle.dump(dates_E1, f)
     pickle.dump(median_RHOA_E1, f)
 # %%
+# read the dates and median_RHOA_E1 from the pickle file
+with open('median_RHOA_E1_and_date.pkl', 'rb') as f:
+    pickled_dates_E1 = pickle.load(f)
+    pickled_median_RHOA_E1 = pickle.load(f)
+
+# %%
+# To pandas DataFrame
+dates_E1 = pd.to_datetime(pickled_dates_E1)
+median_RHOA_E1 = np.array(pickled_median_RHOA_E1)
+rhoa_df = pd.DataFrame({'Date': dates_E1, 'Median Apparent Resistivity': median_RHOA_E1})
+# output the rhoa_df to csv file
+rhoa_df.to_csv('median_rhoa_E1.csv', index=False)
+# %%
      
 import pandas as pd
 def read_hydro_data(data_path):
@@ -278,7 +291,7 @@ def onclick(event):
                 clicked_annotations.append(click_annotation)
                 fig.canvas.draw_idle()
 
-                # date: 2024-03-18 01:00:00 to '24031801_m_E3'
+                # date: 2024-03-18 01:00:00 to '24031801_m_E1'
                 date_folder_names.append(selected_points[-1][0].replace('/','').replace(':','').replace(' ','') [2:-2]+'_m_'+linename)
                 save_ph = join(output_path,date_folder_names[-1])
                 all_mgrs.append(load_inversion_results(save_ph))

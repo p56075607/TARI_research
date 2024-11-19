@@ -45,6 +45,20 @@ for i, pkl_file in enumerate(pkl_files):
 with open('median_RHOA_E3_and_date.pkl', 'wb') as f:
     pickle.dump(dates_E3, f)
     pickle.dump(median_RHOA_E3, f)
+
+# %%
+# read the dates and median_RHOA_E1 from the pickle file
+with open('median_RHOA_E3_and_date.pkl', 'rb') as f:
+    pickled_dates_E3 = pickle.load(f)
+    pickled_median_RHOA_E3 = pickle.load(f)
+
+# %%
+# To pandas DataFrame
+dates_E3 = pd.to_datetime(pickled_dates_E3)
+median_RHOA_E3 = np.array(pickled_median_RHOA_E3)
+rhoa_df = pd.DataFrame({'Date': dates_E3, 'Median Apparent Resistivity': median_RHOA_E3})
+# output the rhoa_df to csv file
+rhoa_df.to_csv('median_rhoa_E3.csv', index=False)
 # %%
 def read_hydro_data(data_path):
     df = pd.read_excel(data_path, sheet_name='彰化竹塘水田')
@@ -62,16 +76,34 @@ def read_hydro_data(data_path):
         daily_rainfall = hourly_avg['Rain(mm)'].resample('d').sum()
     # Delete the RECORD, BattV column
     if 'Rain(mm)' in hourly_avg.columns:
-        return hourly_avg, daily_rainfall
+        return hourly_avg, daily_rainfall, df
     else:
         return hourly_avg, None
     
-_, daily_rainfall = read_hydro_data(r'C:\Users\Git\TARI_research\data\external\水文站資料彙整_20240909.xlsx')
+_, daily_rainfall, hydr_df = read_hydro_data(r'C:\Users\Git\TARI_research\data\external\水文站資料彙整_20240909.xlsx')
 # # # write to pickle file
 # with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'wb') as f:
 #     pickle.dump(daily_rainfall, f)
 # with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'rb') as f:
 #     daily_rainfall = pickle.load(f)
+# %%
+# plot SWC timeseries hydr_df.columns: '10cm', '20cm', '30cm', '40cm', '50cm', '60cm', '80cm', '100cm','150cm', '200cm', '300cm', '400cm', '500cm', '600cm', '700cm', '800cm','900cm'
+fig, ax = plt.subplots(figsize=(8, 8))
+for column in hydr_df.columns:
+    if column in ['10cm', '50cm', '100cm','150cm', '200cm', '300cm', '400cm', '500cm', '600cm', '700cm', '800cm','900cm']:
+        print(column)
+        # ax.scatter(hourly_avg.index, hourly_avg[column], s=1, marker='o', label=column)
+        ax.plot(hydr_df.index, hydr_df[column],linewidth=1, label=column)
+        ax.set_title('Hourly Averages of Hydrological Data and Rainfall')
+        ax.set_xlabel('Time (YYYY-MM-DD)')
+        ax.set_ylabel('Soil Moisture (%)')
+        ax.set_ylim(0, 50)
+        # set xlim from 2024-04-13 to 2024-04-20
+        ax.set_xlim(datetime(2024, 4, 13, 0, 0), datetime(2024, 4, 20, 0, 0))
+    ax.legend(loc='upper right')
+    ax.grid(linestyle='--', linewidth=0.5)
+
+plt.show()
 
 # %%
 # median_rhoa_df = pd.DataFrame({'Date': dates_E3, 'Median Apparent Resistivity': median_rhoa_E3})
@@ -633,11 +665,14 @@ for j in range(begin_index+1,end_index+1,1):
 # %%
 begin_index = dates_E3.index(datetime(2024, 5, 28, 3, 0))
 end_index = dates_E3.index(datetime(2024, 5, 29, 11, 0))
-diff_mgrs = []
-for j in range(begin_index,end_index+1,1):
-    print(output_folders[j])
-    save_ph = join(output_path,output_folders[j])
-    diff_mgrs.append(load_inversion_results(save_ph))
+
+mgr1 = load_inversion_results(join(output_path,output_folders[begin_index]))
+mgr2 = load_inversion_results(join(output_path,output_folders[end_index]))
+# diff_mgrs = []
+# for j in range(begin_index,end_index+1,1):
+#     print(output_folders[j])
+#     save_ph = join(output_path,output_folders[j])
+#     diff_mgrs.append(load_inversion_results(save_ph))
 # %%
 # Plot intensity map
 # pick up X index from 18~19 m
@@ -653,9 +688,9 @@ for i in range(len(every_diff_grid)):
     mean_diff = np.append(mean_diff, diff_1819[:, np.newaxis], axis=1)
 
 colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # 從白色到藍色的顏色組合
-nodes = [0, 0.95, 1]  # 範圍從0到-1是白色，-1到-10是白色到藍色的漸變
+nodes = [0, 0.65, 1]  # 範圍從0到-1是白色，-1到-10是白色到藍色的漸變
 custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))
-kw = dict(cMin=-4, cMax=0,logScale=False,
+kw = dict(cMin=-2.5, cMax=0,logScale=False,
             label='Relative resistivity difference \n(%)',
             xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap=custom_cmap)
 
@@ -717,7 +752,7 @@ ax2.yaxis.set_tick_params(labelsize=fz_minor)
 plt.yticks(fontsize=fz_minor,fontweight='bold')
 plt.show()
 fig.savefig(join(save_folder, 'E3_intensity.png'), dpi=300, bbox_inches='tight')
-
+plt.close()
 # %%
 # %%
 # Plot time series resistivity
@@ -772,4 +807,4 @@ save_folder = r'D:\R2MSDATA\TARI_E3_test\timelapsed_resistivity_difference'
 
 plot_timeseries(median_RHOA_E3, daily_rainfall, dates_E3, begin_index-2, end_index,current_index)
 # %%
-print((datetime(2024, 4, 17, 3, 0)-datetime(2024, 4,14,3, 0)).total_seconds()/3600)
+print((datetime(2024, 4, 17, 11, 0)-datetime(2024, 4,14,3, 0)).total_seconds()/3600)
