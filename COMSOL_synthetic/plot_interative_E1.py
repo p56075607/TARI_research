@@ -53,11 +53,11 @@ with open('median_RHOA_E1_and_date.pkl', 'rb') as f:
 
 # %%
 # To pandas DataFrame
-dates_E1 = pd.to_datetime(pickled_dates_E1)
-median_RHOA_E1 = np.array(pickled_median_RHOA_E1)
-rhoa_df = pd.DataFrame({'Date': dates_E1, 'Median Apparent Resistivity': median_RHOA_E1})
-# output the rhoa_df to csv file
-rhoa_df.to_csv('median_rhoa_E1.csv', index=False)
+# dates_E1 = pd.to_datetime(pickled_dates_E1)
+# median_RHOA_E1 = np.array(pickled_median_RHOA_E1)
+# rhoa_df = pd.DataFrame({'Date': dates_E1, 'Median Apparent Resistivity': median_RHOA_E1})
+# # output the rhoa_df to csv file
+# rhoa_df.to_csv('median_rhoa_E1.csv', index=False)
 # %%
      
 import pandas as pd

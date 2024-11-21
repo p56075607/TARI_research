@@ -53,11 +53,11 @@ with open('median_RHOA_E2_and_date.pkl', 'rb') as f:
 
 # %%
 # To pandas DataFrame
-dates_E2 = pd.to_datetime(pickled_dates_E2)
-median_RHOA_E2 = np.array(pickled_median_RHOA_E2)
-rhoa_df = pd.DataFrame({'Date': dates_E2, 'Median Apparent Resistivity': median_RHOA_E2})
-# output the rhoa_df to csv file
-rhoa_df.to_csv('median_rhoa_E2.csv', index=False)
+# dates_E2 = pd.to_datetime(pickled_dates_E2)
+# median_RHOA_E2 = np.array(pickled_median_RHOA_E2)
+# rhoa_df = pd.DataFrame({'Date': dates_E2, 'Median Apparent Resistivity': median_RHOA_E2})
+# # output the rhoa_df to csv file
+# rhoa_df.to_csv('median_rhoa_E2.csv', index=False)
 # %%
      
 import pandas as pd
@@ -112,7 +112,11 @@ for event in ag_events:
 # # instrument events: 5/28, 5/20, 7/16
 instrument_events = [datetime(2024, 5, 28, 7, 0),
                       datetime(2024, 6, 20, 11, 0),
-                      datetime(2024, 7, 16, 0, 0)]
+                      datetime(2024, 7, 16, 0, 0),
+                      datetime(2024, 9, 28, 1, 0),
+                      datetime(2024, 10,8 , 23, 0),
+                      datetime(2024, 10, 17, 11, 0),
+                      ]
 for event in instrument_events:
     ax.axvline(event, color='k', linestyle='-', linewidth=3)
 
@@ -132,7 +136,7 @@ ax2.spines['right'].set_linewidth(width)
 ax2.spines['bottom'].set_linewidth(width)
 ax2.spines['left'].set_linewidth(width)
 fig.savefig('TARI_E2_timeseries.png', dpi=300, bbox_inches='tight')
-#%%使用 matplotlib.widgets.Cursor 來顯示游標
+#%% 使用 matplotlib.widgets.Cursor 來顯示游標
 cursor = Cursor(ax, useblit=True, color='gray', linewidth=1)
 
 # 檢查 QApplication 是否已初始化

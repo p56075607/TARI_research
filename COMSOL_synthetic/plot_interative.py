@@ -54,11 +54,11 @@ with open('median_RHOA_E3_and_date.pkl', 'rb') as f:
 
 # %%
 # To pandas DataFrame
-dates_E3 = pd.to_datetime(pickled_dates_E3)
-median_RHOA_E3 = np.array(pickled_median_RHOA_E3)
-rhoa_df = pd.DataFrame({'Date': dates_E3, 'Median Apparent Resistivity': median_RHOA_E3})
-# output the rhoa_df to csv file
-rhoa_df.to_csv('median_rhoa_E3.csv', index=False)
+# dates_E3 = pd.to_datetime(pickled_dates_E3)
+# median_RHOA_E3 = np.array(pickled_median_RHOA_E3)
+# rhoa_df = pd.DataFrame({'Date': dates_E3, 'Median Apparent Resistivity': median_RHOA_E3})
+# # output the rhoa_df to csv file
+# rhoa_df.to_csv('median_rhoa_E3.csv', index=False)
 # %%
 def read_hydro_data(data_path):
     df = pd.read_excel(data_path, sheet_name='彰化竹塘水田')
@@ -189,7 +189,9 @@ irregration_events = [datetime(2024, 3, 18, 13, 0),
                         datetime(2024, 8, 23, 11, 0),
                         datetime(2024, 8, 24, 11, 0),
                         datetime(2024, 8, 26, 17, 0),
-                        datetime(2024, 8, 29, 17, 0),
+                        datetime(2024, 8, 29, 21, 0),
+                        datetime(2024, 8, 31, 1, 0),
+                        datetime(2024, 9, 3, 11, 0),
                       ]
 for event in irregration_events:
     ax.axvline(event, color='g', linestyle='-', linewidth=3)
@@ -212,7 +214,7 @@ ax2.spines['bottom'].set_linewidth(width)
 ax2.spines['left'].set_linewidth(width)
 
 fig.savefig('TARI_E3_timeseries.png', dpi=300, bbox_inches='tight')
-#%% 使用 matplotlib.widgets.Cursor 來顯示游標
+# %%使用 matplotlib.widgets.Cursor 來顯示游標
 cursor = Cursor(ax, useblit=True, color='gray', linewidth=1)
 
 app = QApplication(sys.argv)
