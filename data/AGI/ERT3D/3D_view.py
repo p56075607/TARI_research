@@ -20,7 +20,7 @@ def load_inversion_result(save_ph):
                 }
     return mgr_dict
 
-mgr3d = load_inversion_result(r'C:\Users\Git\TARI_research\data\AGI\ERT3D\0910\output\0910\091011')
+mgr3d = load_inversion_result(r'output\091011')
 # %%
 kw = dict(
         logScale=True,cMap='jet',cMin=10,cMax=20,
@@ -53,7 +53,7 @@ pl.background_color = 'white'
 pl.show()
 
 # %%
-data = mgr3d.data
+data = mgr3d['data']
 
 mesh_x = np.linspace(min(pg.x(data)), max(pg.x(data)), 70)
 mesh_y = np.linspace(min(pg.y(data)),max(pg.y(data)), 140)
@@ -62,7 +62,7 @@ mesh_z = 1.0 - np.logspace(np.log10(1.0), np.log10(6.0),50 )
 grid = pg.createGrid(x=mesh_x, y= mesh_y, z= mesh_z)
 
 Resistivity = pg.interpolate(mgr3d['paraDomain'], 
-                             mgr3d['model'],
+                             mgr3d['paraDomain']['Resistivity'],
                              grid.cellCenter())
 grid['Resistivity'] = Resistivity
 # rho_grid = np.reshape(Resistivity,(len(mesh_y),len(mesh_x),len(mesh_z)))
@@ -73,7 +73,14 @@ pl, _ = pg.show(grid, label="Resistivity", style="surface", hold=True, **kw,
 pv.drawMesh(pl, grid, label="Resistivity", style="surface", **kw,
             filter={"slice": dict(normal="y", origin=[0, 7, 0])})
 pv.drawMesh(pl, grid, label="Resistivity", style="surface", **kw,
-            filter={"threshold": dict(value=18, scalars="Resistivity", method="upper")})
+            filter={"slice": dict(normal=[2,1, 0], origin=[3.5, 7, 0])})
+pv.drawMesh(pl, grid, label="Resistivity", style="surface", **kw,
+            filter={"slice": dict(normal=[-2,1, 0], origin=[3.5, 7, 0])})
+# pv.drawMesh(pl, grid, label="Resistivity", style="surface", **kw,
+#             filter={"threshold": dict(value=18, scalars="Resistivity", method="upper")})
+# pv.drawMesh(pl, grid, label="Resistivity", style="surface", **kw,
+#             filter={"threshold": dict(value=13, scalars="Resistivity", method="lower")})
+pv.drawSensors(pl, mgr3d['data'].sensors(), diam=0.1, color='black')
 pl.camera_position = [
     [-20, -20, 20],   # camera_position
     [3.5, 7, -5],      # view point

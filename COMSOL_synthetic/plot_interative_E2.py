@@ -17,7 +17,6 @@ from matplotlib.widgets import Cursor
 from matplotlib.colors import LinearSegmentedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from datetime import timedelta
-import pyperclip
 from io import BytesIO
 import io
 from PyQt5.QtWidgets import QApplication
@@ -51,6 +50,8 @@ with open('median_RHOA_E2_and_date.pkl', 'rb') as f:
     pickled_dates_E2 = pickle.load(f)
     pickled_median_RHOA_E2 = pickle.load(f)
 
+dates_E2 = pickled_dates_E2
+median_RHOA_E2 = pickled_median_RHOA_E2
 # %%
 # To pandas DataFrame
 # dates_E2 = pd.to_datetime(pickled_dates_E2)
@@ -61,21 +62,26 @@ with open('median_RHOA_E2_and_date.pkl', 'rb') as f:
 # %%
      
 import pandas as pd
-def read_hydro_data(data_path):
-    df = pd.read_excel(data_path, sheet_name='農試所(霧峰)雨量資料')
+# def read_hydro_data(data_path):
+#     df = pd.read_excel(data_path, sheet_name='農試所(霧峰)雨量資料')
 
-    # 將'TIME'列轉換為日期時間格式
-    df['TIME'] = pd.to_datetime(df['TIME'])
-    df.set_index('TIME', inplace=True)
+#     # 將'TIME'列轉換為日期時間格式
+#     df['TIME'] = pd.to_datetime(df['TIME'])
+#     df.set_index('TIME', inplace=True)
 
-    # 將'Rain(mm)'列轉換為數字，無法轉換的設置為NaN，然後丟棄NaN值
-    df['Rain(mm)'] = pd.to_numeric(df['Rain(mm)'], errors='coerce')
-    df.dropna(subset=['Rain(mm)'], inplace=True)
+#     # 將'Rain(mm)'列轉換為數字，無法轉換的設置為NaN，然後丟棄NaN值
+#     df['Rain(mm)'] = pd.to_numeric(df['Rain(mm)'], errors='coerce')
+#     df.dropna(subset=['Rain(mm)'], inplace=True)
     
-    daily_rainfall = df['Rain(mm)']
-    return daily_rainfall
+#     daily_rainfall = df['Rain(mm)']
+#     return daily_rainfall
 
-daily_rainfall = read_hydro_data(r'C:\Users\Git\TARI_research\data\external\水文站資料彙整_20240909.xlsx')
+# daily_rainfall = read_hydro_data(r'C:\Users\Git\TARI_research\data\external\水文站資料彙整_20240909.xlsx')
+
+rain_df = pd.read_csv(r'C:\Users\Git\TARI_research\data\external\G2F820\merged_data.csv')
+rain_df['Time'] = pd.to_datetime(rain_df['Time'])
+rain_df.set_index('Time', inplace=True)
+daily_rainfall = rain_df['Precp']
 
 # %%
 fig, ax = plt.subplots(figsize=(25, 8))
@@ -105,6 +111,8 @@ ax.set_ylabel('Apparent Resistivity ($\Omega m$)',fontsize=fz_major)
 ag_events = [datetime(2024, 6, 11, 0, 0),
              datetime(2024, 5, 15, 11, 0),
             datetime(2024, 7, 2, 9, 0),
+            datetime(2024, 10,8 , 23, 0),
+            datetime(2024, 10, 17, 11, 0),
              ]
 for event in ag_events:
     ax.axvline(event, color='g', linestyle='-', linewidth=3)
@@ -114,8 +122,6 @@ instrument_events = [datetime(2024, 5, 28, 7, 0),
                       datetime(2024, 6, 20, 11, 0),
                       datetime(2024, 7, 16, 0, 0),
                       datetime(2024, 9, 28, 1, 0),
-                      datetime(2024, 10,8 , 23, 0),
-                      datetime(2024, 10, 17, 11, 0),
                       ]
 for event in instrument_events:
     ax.axvline(event, color='k', linestyle='-', linewidth=3)
@@ -136,7 +142,7 @@ ax2.spines['right'].set_linewidth(width)
 ax2.spines['bottom'].set_linewidth(width)
 ax2.spines['left'].set_linewidth(width)
 fig.savefig('TARI_E2_timeseries.png', dpi=300, bbox_inches='tight')
-#%% 使用 matplotlib.widgets.Cursor 來顯示游標
+# 使用 matplotlib.widgets.Cursor 來顯示游標
 cursor = Cursor(ax, useblit=True, color='gray', linewidth=1)
 
 # 檢查 QApplication 是否已初始化
@@ -409,7 +415,7 @@ def plot_difference_contour(mgr1, mgr2, urf_file_name1, urf_file_name2,cmap):
     nodes = [0, 0.9, 1]  # 範圍從0到-1是白色，-1到-10是白色到藍色的漸變
     custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))
 
-    kw_diff = dict(cMin=-10, cMax=0,logScale=False,
+    kw_diff = dict(cMin=-5, cMax=0,logScale=False,
                 label='Relative resistivity difference \n(%)',
                 xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap=custom_cmap)
     
@@ -558,8 +564,12 @@ def plot_difference_contour(mgr1, mgr2, urf_file_name1, urf_file_name2,save_fold
 
 all_mgrs = []
 output_folders = [f for f in sorted(listdir(output_path)) if isdir(join(output_path,f))]
-begin_index = dates_E2.index(datetime(2024, 7, 2, 7, 0))
-end_index = dates_E2.index(datetime(2024, 7, 15, 21, 0))
+# begin_index = dates_E2.index(datetime(2024, 7, 2, 7, 0))
+# end_index = dates_E2.index(datetime(2024, 7, 15, 21, 0))
+begin_index = dates_E2.index(datetime(2024, 10, 31, 15, 0))
+end_index = dates_E2.index(datetime(2024, 11, 22, 5, 0))
+# begin_index = dates_E2.index(datetime(2024, 5, 15, 9, 0))
+# end_index = dates_E2.index(datetime(2024, 5, 28, 5, 0))
 save_ph = join(output_path,output_folders[begin_index])
 all_mgrs.append(load_inversion_results(save_ph))
 
@@ -604,7 +614,7 @@ for i in range(len(every_diff_grid)):
     mean_diff = np.append(mean_diff, diff_1819[:, np.newaxis], axis=1)
 
 colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # 從白色到藍色的顏色組合
-nodes = [0, 0.9, 1]  # 範圍從0到-1是白色，-1到-10是白色到藍色的漸變
+nodes = [0, 0.75, 1]  # 範圍從0到-1是白色，-1到-10是白色到藍色的漸變
 custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))
 kw = dict(cMin=-7, cMax=0,logScale=False,
             label='Relative resistivity difference \n(%)',
@@ -612,12 +622,17 @@ kw = dict(cMin=-7, cMax=0,logScale=False,
 
 Tmesh,Ymesh = np.meshgrid(dates_E2[begin_index:end_index],Y[:,0] )
 fig,ax = plt.subplots(figsize=(27.5,12))
-
 # pc = ax.pcolor(Tmesh,Ymesh,(mean_diff),cmap=custom_cmap,vmin=-5, vmax=0)
 levels = np.linspace(kw['cMin'], kw['cMax'], 32)  # Adjust the number of levels as needed
 
 pc = ax.contourf(Tmesh, Ymesh, (mean_diff), cmap=kw['cMap'], levels=levels, vmin=kw['cMin'], vmax=kw['cMax'])
+ax.plot(datetime(2024, 10, 31, 18, 50), -0.1, 'k*', markersize=20,zorder=ax.get_zorder()+1)
+ax.plot(datetime(2024, 10, 31, 19, 40), -0.5, 'k*', markersize=20,zorder=ax.get_zorder()+1)
+ax.plot(datetime(2024, 10, 31, 20, 10), -1  , 'k*', markersize=20,zorder=ax.get_zorder()+1)
 # ax.set_ylim([-8,0])
+end_date = datetime(2024, 11, 5, 5, 0)
+ax.set_xlim([dates_E2[begin_index], end_date])
+ax.set_ylim([-8, 0])
 ax.xaxis.set_major_locator(matplotlib.dates.DayLocator(interval=1))
 ax.xaxis.set_minor_locator(matplotlib.dates.HourLocator(interval=1))
 ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%m/%d'))
@@ -636,12 +651,9 @@ ax.set_xticklabels(xticklabels,rotation = 45, ha='right',rotation_mode="anchor")
 ax.grid(linestyle='--',color='w',linewidth=0.5)
 ax.set_ylabel('Depth (m)',fontsize=fz_major,fontweight='bold')
 ax.set_xlabel('Date (2024/mm/dd)',fontsize=fz_major,fontweight='bold')
-# divider = make_axes_locatable(ax)
-# cbaxes = divider.append_axes("right", size="4.5%", pad=10)
-# m = plt.cm.ScalarMappable(cmap=kw['cMap'])
-# m.set_array(mean_diff)
-# m.set_clim(kw['cMin'],kw['cMax'])
-# cb = plt.colorbar(m, boundaries=np.linspace(kw['cMin'],kw['cMax'], 50),cax=cbaxes)
+
+
+
 
 cb = fig.colorbar(pc, pad=0.08)
 cb.ax.set_yticks(np.linspace(kw['cMin'],kw['cMax'],6))
@@ -649,6 +661,7 @@ cb.ax.set_ylabel(kw['label'],fontsize=fz_major,fontweight='bold')
 cb.ax.yaxis.set_tick_params(labelsize=fz_minor)
 for label in cb.ax.yaxis.get_ticklabels():
     label.set_fontweight('bold')
+
 
 
 title_str = 'Spacial & Temporal Intensity Plot of the '+kw['label'][:-5]
@@ -660,13 +673,16 @@ ax.spines['bottom'].set_linewidth(width)
 ax.spines['left'].set_linewidth(width)
 
 ax2 = ax.twinx()
-ax2.bar(daily_rainfall.index, daily_rainfall, width=1,align='edge', alpha=1,color=[0.3010, 0.7450, 0.9330], label='Rainfall',zorder=1)
+ax2.bar(daily_rainfall.index, daily_rainfall, width=1,align='edge', alpha=1,color=[0.3010, 0.7450, 0.9330],edgecolor='b', label='Rainfall',zorder=1)
 ax2.set_ylabel('Rainfall (mm/day)', color=[0.3010, 0.7450, 0.9330],fontsize=fz_major,fontweight='bold')  # Set label for the secondary Y-axis
 ax2.tick_params(axis='y', labelcolor=[0.3010, 0.7450, 0.9330], length=10,width=3)  # Set ticks color for the secondary Y-axis
-ax2.set_xlim(dates_E2[begin_index], dates_E2[end_index])
+ax.set_xlim([dates_E2[begin_index], end_date])
 ax2.yaxis.set_tick_params(labelsize=fz_minor)
 plt.yticks(fontsize=fz_minor,fontweight='bold')
+
+
 plt.show()
+
 fig.savefig(join(save_folder,'TARI_E2_intensity.png'), dpi=300, bbox_inches='tight')
 # %%
 # Plot time series resistivity
@@ -690,7 +706,7 @@ def plot_timeseries(median_RHOA, daily_rainfall, dates, begin_index, end_index,c
     # 10% of the range above and below the data
     ax.set_ylim([min(median_RHOA[begin_index:end_index]) - 0.1 * (max(median_RHOA[begin_index:end_index]) - min(median_RHOA[begin_index:end_index])),
                  max(median_RHOA[begin_index:end_index]) + 0.1 * (max(median_RHOA[begin_index:end_index]) - min(median_RHOA[begin_index:end_index]))])
-    ax.grid(True, which='major', linestyle='--', linewidth=0.5)
+    ax.grid(True, which='major', linestyle='--', linewidth=1)
     fz_major = 50
     # ax.set_title('Median Apparent Resistivity',fontsize=fz_major,fontweight='bold')
     ax.set_xlabel('Date (2024/mm/dd)',fontsize=fz_major,fontweight='bold')
@@ -713,8 +729,8 @@ def plot_timeseries(median_RHOA, daily_rainfall, dates, begin_index, end_index,c
     fig.savefig(join(save_folder,'TARI_E2_timeseries.png'), dpi=300, bbox_inches='tight')
 
 output_folders = [f for f in sorted(listdir(output_path)) if isdir(join(output_path,f))]
-begin_index = dates_E2.index(datetime(2024, 7, 2, 7, 0))
-end_index = dates_E2.index(datetime(2024, 7, 15, 21, 0))
+# begin_index = dates_E2.index(datetime(2024, 7, 2, 7, 0))
+# end_index = dates_E2.index(datetime(2024, 7, 15, 21, 0))
 
 
 current_index = 44
@@ -724,4 +740,4 @@ plot_timeseries(median_RHOA_E2, daily_rainfall, dates_E2, begin_index-2, end_ind
 
 # %%
 # %%
-print((datetime(2024, 7, 15, 21, 0)-datetime(2024, 7,2,7, 0)).total_seconds()/3600)
+print((datetime(2024, 5,19,1, 0)-datetime(2024, 5,15,9, 0)).total_seconds()/3600)

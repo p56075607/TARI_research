@@ -8,14 +8,17 @@ from os.path import join
 from os import listdir 
 from os.path import isfile
 from os.path import isdir
-sys.path.append(r'F:\研究室電腦E槽\VM\Win7_64bit_EarthImagerVM 1\Share_Folder\PYGIMLY\field_data\SANSIN')
+sys.path.append(r'E:\研究室電腦E槽\VM\Win7_64bit_EarthImagerVM 1\Share_Folder\PYGIMLY\field_data\SANSIN')
 from stg2ohm_pp import stg2ohm
 from pygimli.viewer import pv
+import matplotlib.pyplot as plt
+import pygimli.meshtools as mt
 
 # %%
-stg_fname = r'0910\091011.stg'
-cmd_path = r'0910\091011.cmd'
-output_ph = r'0910\output'
+survey_name = '111801'
+stg_fname = join(survey_name,survey_name+'.stg')#r'0910\091011.stg'
+cmd_path = r'091011\091011.cmd'
+output_ph = join('output',survey_name)
 if not os.path.exists(output_ph):
     os.makedirs(output_ph)
 ohm_file_name = stg2ohm(cmd_path,stg_fname,113,114,is_3D=True)
@@ -26,18 +29,30 @@ data['k'] = ert.createGeometricFactors(data, numerical=True)
 data['rhoa'] = data['r'] * data['k']
 data['err'] = ert.estimateError(data, relativeError=0.02)
 # data.save(stg_fname[:-4]+'.ohm')
+print(data)
 # %%
-import matplotlib.pyplot as plt
+t2 = data['a'] == 89
+index = [i for i, x in enumerate(t2) if x]
+print(r'remove a == ch90 {:d}'.format(len(index)))
+data.remove(t2)
+
+t2 = data['m'] == 89
+index = [i for i, x in enumerate(t2) if x]
+print(r'remove a == ch90 {:d}'.format(len(index)))
+data.remove(t2)
+print(data)
+# %%
+
 # data.show(style="A-M")
 plt.plot(pg.x(data), pg.y(data), ".")
 
 # %%
-import pygimli.meshtools as mt
+
 plc = mt.createParaMeshPLC3D(data, paraDX=1/3.5, paraDepth=10, paraMaxCellSize=10,
                              surfaceMeshQuality=30)
 mesh = mt.createMesh(plc, quality=1.3)
 print(mesh,'paraDomain cell#:',len([i for i, x in enumerate(mesh.cellMarker() == 2) if x]))
-pg.show(mesh, style="wireframe")
+# pg.show(mesh, style="wireframe")
 
 # %%
 def plot_convergence(mgr, output_ph):
@@ -115,7 +130,7 @@ for repeat in range(repeat_time):
     pg.boxprint('rrms={:.2f}%, chi^2={:.3f}'.format(rrms, chi2))
 
     # Creat output folder
-    out_folder = join(output_ph, ohm_file_name[0:-4],'repeat_'+str(repeat+1))
+    out_folder = join(output_ph,'repeat_'+str(repeat+1))
     if not os.path.exists(out_folder):
         os.makedirs(out_folder)
         print(f'Folder "{out_folder}" created.')

@@ -18,7 +18,6 @@ from matplotlib.widgets import Cursor
 from matplotlib.colors import LinearSegmentedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from datetime import timedelta
-import pyperclip
 from io import BytesIO
 import io
 from PyQt5.QtWidgets import QApplication
@@ -31,20 +30,20 @@ output_path = join(pkl_path,'output_second_timelapse_inveriosn')
 pkl_files = [f for f in listdir(pkl_path) if f.endswith('.pkl')]
 
 
-for i, pkl_file in enumerate(pkl_files):
-    with open(join(pkl_path, pkl_file), 'rb') as f:
-        if i == 0:
-            dates_E3 = pickle.load(f)
-            median_RHOA_E3 = pickle.load(f)
-        else:
-            dates_E3 += pickle.load(f)
-            median_RHOA_E3 += pickle.load(f)
+# for i, pkl_file in enumerate(pkl_files):
+#     with open(join(pkl_path, pkl_file), 'rb') as f:
+#         if i == 0:
+#             dates_E3 = pickle.load(f)
+#             median_RHOA_E3 = pickle.load(f)
+#         else:
+#             dates_E3 += pickle.load(f)
+#             median_RHOA_E3 += pickle.load(f)
 
-# %%
-# Save the dates and median_RHOA_E1 to a pickle file
-with open('median_RHOA_E3_and_date.pkl', 'wb') as f:
-    pickle.dump(dates_E3, f)
-    pickle.dump(median_RHOA_E3, f)
+# # %%
+# # Save the dates and median_RHOA_E1 to a pickle file
+# with open('median_RHOA_E3_and_date.pkl', 'wb') as f:
+#     pickle.dump(dates_E3, f)
+#     pickle.dump(median_RHOA_E3, f)
 
 # %%
 # read the dates and median_RHOA_E1 from the pickle file
@@ -52,6 +51,8 @@ with open('median_RHOA_E3_and_date.pkl', 'rb') as f:
     pickled_dates_E3 = pickle.load(f)
     pickled_median_RHOA_E3 = pickle.load(f)
 
+dates_E3 = pickled_dates_E3
+median_RHOA_E3 = pickled_median_RHOA_E3
 # %%
 # To pandas DataFrame
 # dates_E3 = pd.to_datetime(pickled_dates_E3)
@@ -81,29 +82,25 @@ def read_hydro_data(data_path):
         return hourly_avg, None
     
 _, daily_rainfall, hydr_df = read_hydro_data(r'C:\Users\Git\TARI_research\data\external\水文站資料彙整_20240909.xlsx')
-# # # write to pickle file
-# with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'wb') as f:
-#     pickle.dump(daily_rainfall, f)
-# with open(r'C:\Users\Git\TARI_research\COMSOL_synthetic\daily_rainfall.pkl', 'rb') as f:
-#     daily_rainfall = pickle.load(f)
+
 # %%
 # plot SWC timeseries hydr_df.columns: '10cm', '20cm', '30cm', '40cm', '50cm', '60cm', '80cm', '100cm','150cm', '200cm', '300cm', '400cm', '500cm', '600cm', '700cm', '800cm','900cm'
-fig, ax = plt.subplots(figsize=(8, 8))
-for column in hydr_df.columns:
-    if column in ['10cm', '50cm', '100cm','150cm', '200cm', '300cm', '400cm', '500cm', '600cm', '700cm', '800cm','900cm']:
-        print(column)
-        # ax.scatter(hourly_avg.index, hourly_avg[column], s=1, marker='o', label=column)
-        ax.plot(hydr_df.index, hydr_df[column],linewidth=1, label=column)
-        ax.set_title('Hourly Averages of Hydrological Data and Rainfall')
-        ax.set_xlabel('Time (YYYY-MM-DD)')
-        ax.set_ylabel('Soil Moisture (%)')
-        ax.set_ylim(0, 50)
-        # set xlim from 2024-04-13 to 2024-04-20
-        ax.set_xlim(datetime(2024, 4, 13, 0, 0), datetime(2024, 4, 20, 0, 0))
-    ax.legend(loc='upper right')
-    ax.grid(linestyle='--', linewidth=0.5)
+# fig, ax = plt.subplots(figsize=(8, 8))
+# for column in hydr_df.columns:
+#     if column in ['10cm', '50cm', '100cm','150cm', '200cm', '300cm', '400cm', '500cm', '600cm', '700cm', '800cm','900cm']:
+#         print(column)
+#         # ax.scatter(hourly_avg.index, hourly_avg[column], s=1, marker='o', label=column)
+#         ax.plot(hydr_df.index, hydr_df[column],linewidth=1, label=column)
+#         ax.set_title('Hourly Averages of Hydrological Data and Rainfall')
+#         ax.set_xlabel('Time (YYYY-MM-DD)')
+#         ax.set_ylabel('Soil Moisture (%)')
+#         ax.set_ylim(0, 50)
+#         # set xlim from 2024-04-13 to 2024-04-20
+#         ax.set_xlim(datetime(2024, 4, 13, 0, 0), datetime(2024, 4, 20, 0, 0))
+#     ax.legend(loc='upper right')
+#     ax.grid(linestyle='--', linewidth=0.5)
 
-plt.show()
+# plt.show()
 
 # %%
 # median_rhoa_df = pd.DataFrame({'Date': dates_E3, 'Median Apparent Resistivity': median_rhoa_E3})
@@ -136,9 +133,9 @@ ax.set_xlabel('Date',fontsize=fz_major)
 ax.set_ylabel('Apparent Resistivity ($\Omega m$)',fontsize=fz_major)
 
 # instrument events: 4/6, 4/26, 5/1, 7/25, 7/29
-# instrument_events = [datetime(2024, 4, 6, 0, 0), datetime(2024, 4, 26, 0, 0), datetime(2024, 5, 1, 0, 0), datetime(2024, 7, 25, 0, 0), datetime(2024, 7, 29, 0, 0)]
-# for event in instrument_events:
-#     ax.axvline(event, color='k', linestyle='-', linewidth=3)
+instrument_events = [datetime(2024, 4, 6, 0, 0), datetime(2024, 4, 26, 0, 0), datetime(2024, 5, 1, 0, 0), datetime(2024, 7, 25, 0, 0), datetime(2024, 7, 29, 0, 0)]
+for event in instrument_events:
+    ax.axvline(event, color='k', linestyle='-', linewidth=3)
 
 # irregration events: 
 irregration_events = [datetime(2024, 3, 18, 13, 0),
@@ -161,8 +158,8 @@ irregration_events = [datetime(2024, 3, 18, 13, 0),
                       datetime(2024, 5, 21, 21, 0),
                       datetime(2024, 5, 24, 15, 0),
                       datetime(2024, 5, 26, 19, 0),
-                      datetime(2024, 5, 29, 11, 0),
-                      datetime(2024, 6, 2, 19, 0),
+                    #   datetime(2024, 5, 29, 11, 0),
+                    #   datetime(2024, 6, 2, 19, 0),
                       datetime(2024, 6, 8, 21, 0),
                       datetime(2024, 6, 15,13, 0),
                       datetime(2024, 6, 20,11, 0),
@@ -193,8 +190,8 @@ irregration_events = [datetime(2024, 3, 18, 13, 0),
                         datetime(2024, 8, 31, 1, 0),
                         datetime(2024, 9, 3, 11, 0),
                       ]
-for event in irregration_events:
-    ax.axvline(event, color='g', linestyle='-', linewidth=3)
+# for event in irregration_events:
+#     ax.axvline(event, color='g', linestyle='-', linewidth=3)
 
 
 
@@ -214,7 +211,7 @@ ax2.spines['bottom'].set_linewidth(width)
 ax2.spines['left'].set_linewidth(width)
 
 fig.savefig('TARI_E3_timeseries.png', dpi=300, bbox_inches='tight')
-# %%使用 matplotlib.widgets.Cursor 來顯示游標
+# 使用 matplotlib.widgets.Cursor 來顯示游標
 cursor = Cursor(ax, useblit=True, color='gray', linewidth=1)
 
 app = QApplication(sys.argv)
@@ -632,12 +629,13 @@ def plot_difference_contour(mgr1, mgr2, urf_file_name1, urf_file_name2,save_fold
 
 all_mgrs = []
 output_folders = [f for f in sorted(listdir(output_path)) if isdir(join(output_path,f))]
-begin_index = dates_E3.index(datetime(2024, 4, 14, 3, 0))
-end_index = dates_E3.index(datetime(2024, 4, 18, 3, 0))
+# begin_index = dates_E3.index(datetime(2024, 4, 14, 3, 0))
+# end_index = dates_E3.index(datetime(2024, 4, 18, 3, 0))
+begin_index = dates_E3.index(datetime(2024, 6, 2, 3, 0))
+end_index = dates_E3.index(datetime(2024, 6, 6, 21, 0))
 save_ph = join(output_path,output_folders[begin_index])
 all_mgrs.append(load_inversion_results(save_ph))
 
-current_index = 44
 colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # 從白色到藍色的顏色組合
 nodes = [0, 0.9, 1]  # 範圍從0到-1是白色，-1到-10是白色到藍色的漸變
 custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))
@@ -665,8 +663,8 @@ for j in range(begin_index+1,end_index+1,1):
     count += 1
 
 # %%
-begin_index = dates_E3.index(datetime(2024, 5, 28, 3, 0))
-end_index = dates_E3.index(datetime(2024, 5, 29, 11, 0))
+begin_index = dates_E3.index(datetime(2024, 6, 2, 3, 0))
+end_index = dates_E3.index(datetime(2024, 6, 6, 21, 0))
 
 mgr1 = load_inversion_results(join(output_path,output_folders[begin_index]))
 mgr2 = load_inversion_results(join(output_path,output_folders[end_index]))
@@ -678,7 +676,7 @@ mgr2 = load_inversion_results(join(output_path,output_folders[end_index]))
 # %%
 # Plot intensity map
 # pick up X index from 18~19 m
-X_index = np.where((X[0] >= 30) & (X[0] <= 50))[0]
+X_index = np.where((X[0] >= 10) & (X[0] <= 70))[0]
 mean_diff = np.empty((len(Y[:,0]),0))
 for i in range(len(every_diff_grid)):
     data = every_diff_grid[i][:, X_index]
@@ -692,7 +690,7 @@ for i in range(len(every_diff_grid)):
 colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # 從白色到藍色的顏色組合
 nodes = [0, 0.65, 1]  # 範圍從0到-1是白色，-1到-10是白色到藍色的漸變
 custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))
-kw = dict(cMin=-2.5, cMax=0,logScale=False,
+kw = dict(cMin=-1.5, cMax=0,logScale=False,
             label='Relative resistivity difference \n(%)',
             xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap=custom_cmap)
 
@@ -751,6 +749,7 @@ ax2.set_ylabel('Rainfall (mm/day)', color=[0.3010, 0.7450, 0.9330],fontsize=fz_m
 ax2.tick_params(axis='y', labelcolor=[0.3010, 0.7450, 0.9330], length=10,width=3)  # Set ticks color for the secondary Y-axis
 ax2.set_xlim(dates_E3[begin_index], dates_E3[end_index])
 ax2.yaxis.set_tick_params(labelsize=fz_minor)
+ax2.set_ylim([0, 100])
 plt.yticks(fontsize=fz_minor,fontweight='bold')
 plt.show()
 fig.savefig(join(save_folder, 'E3_intensity.png'), dpi=300, bbox_inches='tight')
@@ -787,6 +786,7 @@ def plot_timeseries(median_RHOA, daily_rainfall, dates, begin_index, end_index,c
     ax2.bar(daily_rainfall.index, daily_rainfall, width=1,align='edge', alpha=1,color=[0.3010, 0.7450, 0.9330], label='Rainfall',zorder=1)
     ax2.set_ylabel('Rainfall (mm/day)', color=[0.3010, 0.7450, 0.9330],fontsize=fz_major,fontweight='bold')  # Set label for the secondary Y-axis
     ax2.tick_params(axis='y', labelcolor=[0.3010, 0.7450, 0.9330], length=10,width=3, direction='in')  # Set ticks color for the secondary Y-axis
+    ax2.set_ylim([0, 100])
     # set y ticks label fontsize
     plt.yticks(fontsize=fz_minor,fontweight='bold')
     # ax2.set_ylim([0,50])
@@ -802,11 +802,11 @@ def plot_timeseries(median_RHOA, daily_rainfall, dates, begin_index, end_index,c
 
 
 output_folders = [f for f in sorted(listdir(output_path)) if isdir(join(output_path,f))]
-begin_index = dates_E3.index(datetime(2024, 4, 14, 3, 0))
-end_index = dates_E3.index(datetime(2024, 4, 18, 3, 0))
+# begin_index = dates_E3.index(datetime(2024, 4, 14, 3, 0))
+# end_index = dates_E3.index(datetime(2024, 4, 18, 3, 0))
 current_index = 44
 save_folder = r'D:\R2MSDATA\TARI_E3_test\timelapsed_resistivity_difference'
 
 plot_timeseries(median_RHOA_E3, daily_rainfall, dates_E3, begin_index-2, end_index,current_index)
 # %%
-print((datetime(2024, 4, 17, 11, 0)-datetime(2024, 4,14,3, 0)).total_seconds()/3600)
+print((datetime(2024, 6, 5,11, 0)-datetime(2024, 6,2,3, 0)).total_seconds()/3600)

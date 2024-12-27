@@ -9,10 +9,10 @@ from os.path import join
 import matplotlib.pyplot as plt
 
 # %%
-stg_fname = join(r"C:\Users\Git\TARI_research\data\AGI\ERT2D\110702\110702.stg")
+stg_fname = join(r"C:\Users\Git\TARI_research\data\AGI\ERT3D\0910\091011.ohm")
 data1 = ert.load(stg_fname)
 print(data1)
-stg_fname = join(r"C:\Users\Git\TARI_research\data\AGI\ERT2D\110501\110501.stg")
+stg_fname = join(r"C:\Users\Git\TARI_research\data\AGI\ERT3D\111801\111801.ohm")
 data2 = ert.load(stg_fname)
 print(data2)
 
