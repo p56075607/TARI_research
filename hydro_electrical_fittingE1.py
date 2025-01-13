@@ -177,12 +177,12 @@ def load_inversion_results(save_ph):
 
     return mgr_dict
 
-output_path = r'D:\R2MSDATA\TARI_E1_test\output_second_inversion_103100_111200'
+output_path = r'D:\R2MSDATA\TARI_E1_test\output_second_inversion'
 output_folders = [f for f in sorted(listdir(output_path)) if isdir(join(output_path,f))]
 # print(output_folders) # ['24022917_m_E1', '24022921_m_E1', '24030215_m_E1', '24030221_m_E1',...]
 all_mgrs = []
-begin_index = output_folders.index('24103108_m_E1')
-end_index = output_folders.index('24110700_m_E1')
+begin_index = output_folders.index('24100806_m_E1')
+end_index = output_folders.index('24101500_m_E1')
 for j in range(begin_index,end_index+1,1):
     print(output_folders[j])
     all_mgrs.append(load_inversion_results(join(output_path,output_folders[j])))
@@ -216,15 +216,15 @@ for j in range(len(all_mgrs)-1):
 # Plot water_m2 time-series
 fig, ax = plt.subplots(figsize=(15, 8))
 # Change folder name to datetime
-dates = [datetime.strptime(folder_name[:8], '%y%m%d%H') for folder_name in output_folders[begin_index:end_index]]
+dates = [datetime.strptime(folder_name[:8], '%y%m%d%H') for folder_name in output_folders[begin_index+1:end_index+1]]
 # ax.plot(dates, SWC_diff_over_1m-SWC_diff_over_1m[0], '-sb',linewidth=3,markersize=10, label='SWC Change from ERT in x=0~43 m')
 # ax.plot(dates, SWC_diff_left-SWC_diff_left[0], '-vg', linewidth=3, markersize=10, label='SWC Change from ERT in x=0~18 m')
 # ax.plot(dates, SWC_diff_right-SWC_diff_right[0], '-vk', linewidth=3, markersize=10, label='SWC Change from ERT in x=19~43 m')
 ma_SWC_diff = pd.Series(SWC_diff).rolling(window=3).mean()
-ax.plot(dates, ma_SWC_diff-SWC_diff[0], '-o',color='k', linewidth=3, markersize=10, label='ERT at x=18~19 m')
-# ax.set_xlim([datetime(2024, 10, 8, 0, 0), datetime(2024, 10, 14, 16, 0)])
-ax.set_xlim([datetime(2024, 10, 31, 0, 0), datetime(2024, 11, 7, 0, 0)])
-ax.set_ylim([-0.005, 0.021])
+ax.plot(dates, SWC_diff-SWC_diff[0], '-o',color='k', linewidth=3, markersize=10, label='ERT at x=18~19 m')
+ax.set_xlim([datetime(2024, 10, 8, 0, 0), datetime(2024, 10, 14, 16, 0)])
+# ax.set_xlim([datetime(2024, 10, 31, 0, 0), datetime(2024, 11, 7, 0, 0)])
+# ax.set_ylim([-0.005, 0.021])
 ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
 ax.xaxis.set_minor_locator(mdates.HourLocator(interval=2))
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
@@ -247,7 +247,7 @@ ax.grid(True, which='major', linestyle='-', linewidth=1)
 
 # Plot the filterd_hydro_data['mean_1m'] at ax2
 filterd_hydro_data['date_time'] = pd.to_datetime(filterd_hydro_data['date_time'])
-index = filterd_hydro_data['date_time'] == datetime(2024, 10, 31, 0, 0)
+index = filterd_hydro_data['date_time'] == datetime(2024, 10, 8, 6, 0)#datetime(2024, 10, 31, 0, 0)
 filterd_hydro_data['SWChange_hydro'] = (filterd_hydro_data['mean_1m']-list(filterd_hydro_data['mean_1m'][index])[0])/100*0.75
 ax.plot(filterd_hydro_data['date_time'], filterd_hydro_data['SWChange_hydro'], 
         '-or', linewidth=3, markersize=10, label='Contact Sensor')
@@ -272,10 +272,10 @@ def y_tick_formatter(value, tick_number):
 # ax.yaxis.set_major_formatter(FuncFormatter(y_tick_formatter))
 
 # Extract filterd_hydro_data['SWChange_hydro'] from 2024/10/10 10:00 to 2024/10/14 14:00
-# start_time = pd.Timestamp('2024-10-10 06:00')
-# end_time = pd.Timestamp('2024-10-14 14:00')
-start_time = pd.Timestamp('2024-11-02 06:00')
-end_time = pd.Timestamp('2024-11-07 00:00')
+start_time = pd.Timestamp('2024-10-10 06:00')
+end_time = pd.Timestamp('2024-10-14 14:00')
+# start_time = pd.Timestamp('2024-11-02 06:00')
+# end_time = pd.Timestamp('2024-11-07 00:00')
 filtered_df = filterd_hydro_data[(filterd_hydro_data['date_time'] >= start_time) & (filterd_hydro_data['date_time'] <= end_time)]
 filtered_df['time_delta'] = (filtered_df['date_time'] - filtered_df['date_time'].min()).dt.total_seconds() / 3600
 x = filtered_df['time_delta'].values
@@ -286,8 +286,8 @@ slope, intercept = coefficients
 from datetime import datetime, timedelta
 
 # Define the start datetime
-# start_datetime = datetime.strptime('2024/10/10 06:00', '%Y/%m/%d %H:%M')
-start_datetime = datetime.strptime('2024/11/02 06:00', '%Y/%m/%d %H:%M')
+start_datetime = datetime.strptime('2024/10/10 06:00', '%Y/%m/%d %H:%M')
+# start_datetime = datetime.strptime('2024/11/02 06:00', '%Y/%m/%d %H:%M')
 # Initialize an empty list to store the datetime objects
 THMC_time = []
 num = 60
@@ -298,12 +298,12 @@ for i in range(len(x_delta)):
     # Append the current datetime to the list
     THMC_time.append(start_datetime + timedelta(hours=i*2))
 
-ax.plot(THMC_time, slope * x_delta + intercept, 
-        '--k',alpha=0.2, linewidth=3, markersize=10, label='Water Change from Contact Sensor')
+# ax.plot(THMC_time, slope * x_delta + intercept, 
+#         '--k',alpha=0.2, linewidth=3, markersize=10, label='Water Change from Contact Sensor')
 
 # Define the start datetime
-# start_datetime = datetime.strptime('2024/10/08 12:00', '%Y/%m/%d %H:%M')
-start_datetime = datetime.strptime('2024/10/31 20:00', '%Y/%m/%d %H:%M')
+start_datetime = datetime.strptime('2024/10/08 12:00', '%Y/%m/%d %H:%M')
+# start_datetime = datetime.strptime('2024/10/31 20:00', '%Y/%m/%d %H:%M')
 # Initialize an empty list to store the datetime objects
 THMC_time = []
 num = 60
@@ -314,8 +314,8 @@ for i in range(len(x_delta)):
     # Append the current datetime to the list
     THMC_time.append(start_datetime + timedelta(hours=i*2))
 
-ax.plot(THMC_time, slope * x_delta + intercept, 
-        '--b', linewidth=3, markersize=10, label='Water Change from Contact Sensor')
+# ax.plot(THMC_time, slope * x_delta + intercept, 
+#         '--b', linewidth=3, markersize=10, label='Water Change from Contact Sensor')
 
 
 # %%
