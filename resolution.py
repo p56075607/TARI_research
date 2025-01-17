@@ -44,7 +44,15 @@ data = ert.simulate(mesh=mesh, scheme=scheme, res=rhomap, noiseLevel=1,
                             noiseAbs=1e-6, 
                             seed=1337) 
 print_data_siminfo(data)
-
+# %%
+mgr = ert.ERTManager(data)
+mesh_inv = mt.createMesh(world, area=1)
+mgr.invert(mesh=mesh_inv, lam=30, verbose=True)
+# %%
+from pygimli.frameworks.resolution import resolutionMatrix
+RM = resolutionMatrix(mgr.inv)
+pg.show(mesh_inv,RM.diagonal())
+pg.show(mesh_inv, mgr.coverage())
 # %%
 mgr = ert.ERTManager(scheme)
 model = pg.Vector(mesh.cellCount(), rho1)
