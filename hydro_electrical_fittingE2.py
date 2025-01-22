@@ -8,6 +8,7 @@ from datetime import datetime
 import pygimli as pg
 from scipy.optimize import curve_fit
 from pygimli.physics import ert  # the module
+import pickle
 # %%
 # input csv file 
 df = pd.read_csv("data\external\旱田_1217.csv")
@@ -30,23 +31,29 @@ fig, ax = plt.subplots()
 ax.plot(df.index, df["mean_1m"], label="mean_1m")
 
 # %%
-urf_path = join(r'D:\R2MSDATA\TARI_E2_test','test_urf')
-ohmfiles = sorted([_ for _ in listdir(urf_path) if _.endswith('.ohm')])
+# urf_path = join(r'D:\R2MSDATA\TARI_E2_test','test_urf')
+# ohmfiles = sorted([_ for _ in listdir(urf_path) if _.endswith('.ohm')])
 
-all_data = []
-dates = []
-for i,output_folder_name in enumerate(ohmfiles):
-    print(output_folder_name)
-    data = pg.load(join(urf_path, output_folder_name))
-    data.remove(~((data['a']==33)*(data['b']==30)*(data['m']==31)*(data['n']==32)))
-    if i == 0:
-        k = ert.createGeometricFactors(data, numerical=True)
-    data['rhoa'] = k * data['r']
-    all_data.append(data['rhoa'][0])
-    dates.append(pd.to_datetime(datetime.strptime(output_folder_name[:8] , '%y%m%d%H')))
+# all_data = []
+# dates = []
+# for i,output_folder_name in enumerate(ohmfiles):
+#     print(output_folder_name)
+#     data = pg.load(join(urf_path, output_folder_name))
+#     data.remove(~((data['a']==33)*(data['b']==30)*(data['m']==31)*(data['n']==32)))
+#     if i == 0:
+#         k = ert.createGeometricFactors(data, numerical=True)
+#     data['rhoa'] = k * data['r']
+#     all_data.append(data['rhoa'][0])
+#     dates.append(pd.to_datetime(datetime.strptime(output_folder_name[:8] , '%y%m%d%H')))
+# Import ERT data
+# read the dates and median_RHOA_E1 from the pickle file
+with open(join(r'C:\Users\Git\masterdeg_programs\pyGIMLi\field data\TARI_monitor','median_RHOA_E2_and_date.pkl'), 'rb') as f:
+    dates = list(pickle.load(f))
+    all_data = list(pickle.load(f))
+
 # %%
 fig, ax = plt.subplots()
-ax.plot(df.index, df["mean_1m"], label="mean_1m")
+# ax.plot(df.index, df["mean_1m"], label="mean_1m")
 ax2 = ax.twinx()
 ax2.plot(dates, all_data,color='orange')
 # %%
@@ -58,7 +65,7 @@ ax2.plot(dates, all_data,color='orange')
 
 # Extract df data from dates
 filterd_hydro_data = pd.DataFrame( columns=df.columns )
-for i in range(len(ohmfiles)):
+for i in range(len(all_data)):
     mask = (df['date_time'] == dates[i])
     filterd_hydro_data = pd.concat([filterd_hydro_data, df.loc[mask]])
 
@@ -109,13 +116,13 @@ fig, ax = plt.subplots(figsize=(10,8))
 ax.scatter(x_data, y_data, c=filterd_hydro_data.index, label='Data points',s=3)
 ax.plot(x_fit, y_fit, color='red', label=f'Fit: y = {a:.2f}ln(x) + {b:.2f}')
 ax.fill_between(x_fit, y_fit_lower, y_fit_upper, color='red', alpha=0.1, label='±5% Confidence Interval')
-ax.set_xlim(xlim)
+# ax.set_xlim(xlim)
 ylim = [30, 250]
-ax.set_ylim(ylim)
+# ax.set_ylim(ylim)
 
 fontsize=18
 # Adding equation and R-squared to the plot
-plt.text(xlim[0],ylim[0] ,f'    $y = {a:.2f} \ln(x) + {b:.2f}$\n    $R^2 = {r_squared:.2f}$\n', fontsize=fontsize)
+# plt.text(xlim[0],ylim[0] ,f'    $y = {a:.2f} \ln(x) + {b:.2f}$\n    $R^2 = {r_squared:.2f}$\n', fontsize=fontsize)
 
 # Labels and legend
 plt.xlabel('Water content (%)',fontsize=fontsize,fontweight='bold')

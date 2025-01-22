@@ -15,7 +15,6 @@ import matplotlib.dates as mdates
 from datetime import datetime
 from os import listdir
 from os.path import isdir, join
-import mplcursors
 from matplotlib.widgets import Cursor
 import tkinter as tk
 from matplotlib.colors import LinearSegmentedColormap
@@ -277,14 +276,24 @@ end_index = dates_E3.index(datetime(2024, 6, 6, 21, 0))
 Begin_End_IDX.append((begin_index,end_index+1))
 
 DIFF_interpolated_rhoa = []
+slopes = []
+rhoa_wet = []
 for i in range(int(len(Begin_End_IDX))):
     time_diffs_in_hours, rhoa_diffs = plot_real_rhoa(Begin_End_IDX[i][0],Begin_End_IDX[i][1])
     DIFF_time.append(time_diffs_in_hours)
     DIFF_rhoa.append(rhoa_diffs)
+
+    rhoa_List= [np.log10(rhoa) for rhoa in median_rhoa_E3[Begin_End_IDX[i][0]:Begin_End_IDX[i][1]]]
+
+    slope, intercept = np.polyfit(time_diffs_in_hours, (rhoa_List), 1)
+    slopes.append(slope)
+    rhoa_wet.append(rhoa_List[0])
     # Interpolation to time_values 
     interpolated_rhoa_diffs = np.interp(np.linspace(0,98,50), time_diffs_in_hours, rhoa_diffs)
     DIFF_interpolated_rhoa.append(interpolated_rhoa_diffs)
 
+
+# %%
 # outlier
 # begin_index = dates_E3.index(datetime(2024, 4, 8, 11, 0))
 # end_index = dates_E3.index(datetime(2024, 4, 11, 3, 0))
@@ -310,11 +319,11 @@ for j in range(len(all_time)):
 # ax.plot(time_values, [(rhoa - median_rhoa_5[0]) for rhoa in median_rhoa_5],color='b', marker='o', linestyle='-', label='Comsol modeling result: Ks=1e-5 (m/s)')
 # ax.plot(time_values, [(rhoa - median_rhoa_6[0]) for rhoa in median_rhoa_6],color='r', marker='o', linestyle='-', label='Comsol modeling result: Ks=1e-6 (m/s)')
 # ax.plot(time_values, [(rhoa - median_rhoa_7[0]) for rhoa in median_rhoa_7],color='k', marker='o', linestyle='-', label='Comsol modeling result: Ks=1e-7 (m/s)')
-case_name = ['2m','4m','6m','8m']
+case_name = ['2m','8m']
 for i in range(len(case_name)):
-    ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_5'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_5']],color='b', marker='x', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-5 (m/s)')
-    ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_6'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_6']],color='r', marker='o', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-6 (m/s)')
-    ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_7'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_7']],color='orange', marker='+', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-7 (m/s)')
+    ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_5'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_5']], marker='x', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-5 (m/s)')
+    # ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_6'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_6']],color='r', marker='o', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-6 (m/s)')
+    # ax.plot(time_values, [(rhoa - median_rhoa_dict[case_name[i]+'_7'][0]) for rhoa in median_rhoa_dict[case_name[i]+'_7']],color='orange', marker='+', linestyle='-', label='Comsol result, Wet Depth= '+case_name[i]+', Ks=1e-7 (m/s)')
 
 # plot 5E6
 # ax.plot(time_values, [(rhoa - median_rhoa_5E6[0]) for rhoa in median_rhoa_5E6], marker='s', linestyle='-',color='k',linewidth=3, label='Comsol result, Wet Depth= 2m, Ks=5e-6 (m/s)')
