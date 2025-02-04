@@ -13,17 +13,22 @@ print(scheme)
 # %%
 plc = mt.createPolygon(scheme.sensors(), isClosed=True,
                        addNodes=3, interpolate='spline',boundaryMarker=-1)
-c3 = mt.createCircle(pos=(0.0, 0.0), radius=0.1, segments=100, marker=1)
-mesh_constrain = mt.createMesh(plc+c3, quality=34.3, area=8e-5, smooth=[10, 1])
-print(mesh_constrain)
-
 mesh = mt.createMesh(plc, quality=34.3, area=8e-5, smooth=[10, 1])
 print(mesh)
-ax, _ = pg.show(mesh,markers=True)
+# ax, _ = pg.show(mesh,markers=True)
+coor = []
 for i, s in enumerate(scheme.sensors()):
-    ax.text(s.x(), s.y(), str(i+1), zorder=100)
+    # ax.text(s.x(), s.y(), str(i+1), zorder=100)
+    coor.append([0.5*s.x(), 0.5*s.y()])
 
-c2 = mt.createCircle(pos=(0.0, 0.0), radius=0.1, segments=100, marker=2)
+# c2 = mt.createCircle(pos=(0.0, 0.0), radius=0.1, segments=100, marker=2)
+c2 = mt.createPolygon(coor, isClosed=True, addNodes=3, interpolate='spline', marker=1)
+mesh_constrain = mt.createMesh(plc+c2, quality=34.3, area=8e-5, smooth=[10, 1])
+print(mesh_constrain)
+pg.show(mesh_constrain,markers=True)
+
+
+c2 = mt.createPolygon(coor, isClosed=True, addNodes=3, interpolate='spline', marker=2)
 geom = plc+ c2
 mesh_fwd = mt.createMesh(geom, area=8e-5, smooth=[10, 1])
 pg.show(mesh_fwd,markers=True)
