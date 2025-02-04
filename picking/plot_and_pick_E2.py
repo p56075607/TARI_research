@@ -266,7 +266,7 @@ df_picking_E3 = pd.read_csv(r'C:\Users\Git\TARI_research\picking\E3_picking.csv'
 # merge 
 # df_picking = pd.concat([df_picking_E1, df_picking_E2], axis=0)
 # plot the picking slope histogram
-fig, ax = plt.subplots(figsize=(20, 8))
+fig, ax = plt.subplots(figsize=(10, 10))
 plt.rcParams['font.family'] = 'Microsoft JhengHei'
 
 def linear_regression(x, y,data_name):
@@ -290,7 +290,7 @@ slope, intercept = linear_regression( np.log10(df_picking_E1['rhoa_sat']),df_pic
 slope, intercept = linear_regression( np.log10(df_picking_E2['rhoa_sat']),df_picking_E2['slope'],'旱田')
 
 # E3
-# slope, intercept = linear_regression(np.log10(df_picking_E3['rhoa_sat']), df_picking_E3['slope'], '竹塘')
+slope, intercept = linear_regression(np.log10(df_picking_E3['rhoa_sat']), df_picking_E3['slope'], '竹塘')
 
 # ax.semilogy(df_picking['slope'], df_picking['rhoa_sat'], 'o', color='k', markersize=10)
 fontsize = 20
@@ -305,7 +305,7 @@ plt.yticks(fontsize=15)
 plt.show()
 fig.savefig(join('drying_slope_vs_wet_state.png'), dpi=300, bbox_inches='tight')
 # %%
-t_max = 3000
+t_max = 1000
 t = np.linspace(0, t_max, 100)
 K = (slope*np.log10(np.min(rhoa_sat))+intercept)
 rho = (K*np.exp(slope*t)-intercept)/slope
@@ -314,8 +314,10 @@ fig, ax = plt.subplots(figsize=(5, 5))
 ax.plot(t,rho, '-', color='k', markersize=10)
 ax.set_xlabel('Time (hr)')
 ax.set_ylabel(r'Apparent Resistivity $log(\rho_a)$')
+ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
 ax.grid(True, which='major', linestyle='--', linewidth=0.5)
 plt.show()
+fig.savefig(join('drying_curve_E2.png'), dpi=300, bbox_inches='tight')
 # %%
 fig, ax = plt.subplots(figsize=(5, 5))
 ax.plot(rho[1:], np.diff(rho)/np.diff(t), '-', color='k', markersize=10)
@@ -333,17 +335,20 @@ ax.set_ylabel('Time to drain (hr)')
 ax.set_xlabel(r'Apparent Resistivity $log(\rho_a)$')
 
 theta_c = np.exp(((10**rho_min)-1464.81)/-348.74)
-theta = abs(np.exp(((10**rho)-1464.81)/-348.74)-theta_c)
+theta =   abs(np.exp(((10**rho)-1464.81)/-348.74)-theta_c)
 ax2 = ax.twinx()
 ax2.plot(rho,theta, '-', color='b', markersize=10)
 ax2.set_ylabel('Water needed (%)',color='b')
 ax2.tick_params(axis='y', labelcolor='b')
 ax.grid(True, which='major', linestyle='--', linewidth=0.5)
 plt.show()
+fig.savefig(join('drying_X_curve_E2.png'), dpi=300, bbox_inches='tight')
 # %%
 fig, ax = plt.subplots(figsize=(5, 5))
 ax.plot(rho,(90*24/t_drain)*theta, '-', color='k', markersize=10)
 ax.set_ylabel('Total Water Usage (mm)')
 ax.set_xlabel(r'Apparent Resistivity $log(\rho_a)$')
+ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
 ax.grid(True, which='major', linestyle='--', linewidth=0.5)
 plt.show()
+fig.savefig(join('demand_water_curve_E2.png'), dpi=300, bbox_inches='tight')

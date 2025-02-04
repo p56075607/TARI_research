@@ -22,7 +22,7 @@ import io
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QImage
 import sys
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, linregress
 # %%
 # Import ERT data
 # read the dates and median_RHOA_E1 from the pickle file
@@ -238,6 +238,87 @@ ax.grid(True, which='major', linestyle='--', linewidth=0.5)
 plt.xticks(fontsize=15)
 plt.yticks(fontsize=15)
 plt.show()
-
+# df_picking.to_csv(r'C:\Users\Git\TARI_research\picking\E1_picking.csv', index=False)
 # %%
-df_picking.to_csv(r'C:\Users\Git\TARI_research\picking\E1_picking.csv', index=False)
+df_picking_E1 = pd.read_csv(r'C:\Users\Git\TARI_research\picking\E1_picking.csv')
+# merge 
+# df_picking = pd.concat([df_picking_E1, df_picking_E2], axis=0)
+# plot the picking slope histogram
+fig, ax = plt.subplots(figsize=(20, 8))
+plt.rcParams['font.family'] = 'Microsoft JhengHei'
+
+def linear_regression(x, y,data_name):
+    # 計算線性回歸
+    slope, intercept, r_value, p_value, std_err = linregress(x, y)
+    
+    # 計算 CR 值
+    r, p_value = pearsonr(x, np.log10(y))
+    ax.scatter(x,y,label=data_name)
+    y_pred = intercept + slope * x
+    ax.plot(x, y_pred,alpha=0.5, label='相關係數:{:.2f}'.format(r))
+    # ax.text(max(x),min(y) ,f'y = {slope:.2f}x + {intercept:.2f}\n$R^2$ = {r_squared:.2f}', fontsize=12)
+    
+    return slope, intercept
+
+
+# E1 
+slope, intercept = linear_regression( np.log10(df_picking_E1['rhoa_sat']),df_picking_E1['slope'],'水田')
+# ax.semilogy(df_picking['slope'], df_picking['rhoa_sat'], 'o', color='k', markersize=10)
+fontsize = 20
+ax.set_title('濕潤狀態 vs 乾燥斜率', fontsize=fontsize)
+ax.set_ylabel(r'乾燥斜率 ($\Delta log(\rho_a)/\Delta hr$)', fontsize=fontsize)
+ax.set_xlabel(r'濕潤狀態 $log(\rho_a)$', fontsize=fontsize)
+ax.grid(True, which='major', linestyle='--', linewidth=0.5)
+ax.legend( fontsize=15)
+plt.ticklabel_format(style='sci', scilimits=(0,0), axis='x')
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+plt.show()
+# %%
+t_max = 500
+t = np.linspace(0, t_max, 100)
+K = (slope*np.log10(np.min(rhoa_sat))+intercept)
+rho = (K*np.exp(slope*t)-intercept)/slope
+
+fig, ax = plt.subplots(figsize=(5, 5))
+ax.plot(t,rho, '-', color='k', markersize=10)
+ax.set_xlabel('Time (hr)')
+ax.set_ylabel(r'Apparent Resistivity $log(\rho_a)$')
+ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
+ax.grid(True, which='major', linestyle='--', linewidth=0.5)
+plt.show()
+fig.savefig(join('drying_curve_E1.png'), dpi=300, bbox_inches='tight')
+# %%
+fig, ax = plt.subplots(figsize=(5, 5))
+ax.plot(rho[1:], np.diff(rho)/np.diff(t), '-', color='k', markersize=10)
+plt.show()
+# %%
+rho_min = np.log10(np.min(rhoa_sat))
+rho_max = np.log10(np.max(rhoa_ini))
+rho = np.linspace(rho_min, rho_max, 100)
+K = (slope*np.log10(np.min(rhoa_sat))+intercept)
+t_drain = np.log((slope*rho+intercept)/K)/slope
+
+fig, ax = plt.subplots(figsize=(5, 5))
+ax.plot(rho,t_drain, '-', color='k', markersize=10)
+ax.set_ylabel('Time to drain (hr)')
+ax.set_xlabel(r'Apparent Resistivity $log(\rho_a)$')
+
+theta_c = np.exp(((10**rho_min)-201.83)/-43.54)
+theta = abs(np.exp(((10**rho)-201.83)/-43.54)-theta_c)
+ax2 = ax.twinx()
+ax2.plot(rho,theta, '-', color='b', markersize=10)
+ax2.set_ylabel('Water needed (%)',color='b')
+ax2.tick_params(axis='y', labelcolor='b')
+ax.grid(True, which='major', linestyle='--', linewidth=0.5)
+plt.show()
+fig.savefig(join('drying_X_curve_E1.png'), dpi=300, bbox_inches='tight')
+# %%
+fig, ax = plt.subplots(figsize=(5, 5))
+ax.plot(rho,(90*24/t_drain)*theta, '-', color='k', markersize=10)
+ax.set_ylabel('Total Water Usage (mm)')
+ax.set_xlabel(r'Apparent Resistivity $log(\rho_a)$')
+ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
+ax.grid(True, which='major', linestyle='--', linewidth=0.5)
+plt.show()
+fig.savefig(join('demand_water_curve_E1.png'), dpi=300, bbox_inches='tight')

@@ -14,7 +14,7 @@ df = pd.read_csv("data\external\竹塘水田.csv")
 
 # plot the data x: "Timestamp", y:10cm	50cm	100cm
 fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(df.index, df["10cm"])
+ax.plot(df.index, df["100cm"])
 
 # %%
 # aveage the data hourly
