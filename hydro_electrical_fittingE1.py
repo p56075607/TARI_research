@@ -10,25 +10,47 @@ from scipy.optimize import curve_fit
 from pygimli.physics import ert  # the module
 import matplotlib.dates as mdates
 # %%
-# input csv file 
-df = pd.read_csv("data\external\水田_1217.csv")
+def read_hydro_data(data_path):
+    df = pd.read_excel(data_path, sheet_name='農試所水田')
 
-# plot the data x: "Timestamp", y:10cm	50cm	100cm
+    # 將'TIME'列轉換為日期時間格式
+    df['TIME'] = pd.to_datetime(df['TIME'])
+    df.set_index('TIME', inplace=True)
+
+    return df
+df = read_hydro_data(join(r'C:\Users\Git\TARI_research\data\external','水文站資料彙整_20241127.xlsx'))
+
+# %%
 fig, ax = plt.subplots()
-ax.plot(df.index, df["10cm"], label="10cm")
-ax.plot(df.index, df["50cm"], label="50cm")
-ax.plot(df.index, df["100cm"], label="100cm")
+ax.plot(df.index, df["30cm"], label="30cm")
+# set xlim from 2024/9/1 to 2024/12/31
+ax.set_xlim([datetime(2024, 9, 1, 0, 0), datetime(2024, 12, 31, 0, 0)])
+# %%
+df = df.resample("h").mean()
+df['date_time'] = df.index
+df["mean_1m"] = df["30cm"]
+fig, ax = plt.subplots()
+ax.plot(df.index, df["mean_1m"], label="mean_1m")
+# %%
+# input csv file 
+# df = pd.read_csv("data\external\水田_1217.csv")
+
+# # plot the data x: "Timestamp", y:10cm	50cm	100cm
+# fig, ax = plt.subplots()
+# ax.plot(df.index, df["10cm"], label="10cm")
+# ax.plot(df.index, df["50cm"], label="50cm")
+# ax.plot(df.index, df["100cm"], label="100cm")
 
 # %%
 # aveage the data hourly
-df["Timestamp"] = pd.to_datetime(df["Timestamp"])
-df.set_index("Timestamp", inplace=True)
-df = df.resample("h").mean()
-df['date_time'] = df.index
-# average 10cm	50cm	100cm data to df['mean_1m']
-df["mean_1m"] = (df["10cm"] + df["50cm"] + df["100cm"]) / 3
-fig, ax = plt.subplots()
-ax.plot(df.index, df["mean_1m"], label="mean_1m")
+# df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+# df.set_index("Timestamp", inplace=True)
+# df = df.resample("h").mean()
+# df['date_time'] = df.index
+# # average 10cm	50cm	100cm data to df['mean_1m']
+# df["mean_1m"] = df["30cm"]#(df["10cm"] + df["50cm"] + df["100cm"]) / 3
+# fig, ax = plt.subplots()
+# ax.plot(df.index, df["mean_1m"], label="mean_1m")
 
 # # %%
 # urf_path = join(r'D:\R2MSDATA\TARI_E1_test','test_urf')
@@ -48,6 +70,12 @@ ax.plot(df.index, df["mean_1m"], label="mean_1m")
 # # load mesh geometry
 # # para_domain = pg.load(join(output_path,output_folder_name,'ERTManager','resistivity-pd.bms'))
 # %%
+import pickle
+with open(join(r'C:\Users\Git\masterdeg_programs\pyGIMLi\field data\TARI_monitor','median_RHOA_E1_and_date.pkl'), 'rb') as f:
+    dates = pickle.load(f)
+    all_data = pickle.load(f)
+
+# %%
 fig, ax = plt.subplots(figsize=(15,8))
 ax.plot(df.index, df["mean_1m"], label="mean_1m")
 ax2 = ax.twinx()
@@ -61,7 +89,7 @@ ax2.plot(dates, all_data,color='orange')
 
 # Extract df data from dates
 filterd_hydro_data = pd.DataFrame( columns=df.columns )
-for i in range(len(ohmfiles)):
+for i in range(len(dates)):
     mask = (df['date_time'] == dates[i])
     filterd_hydro_data = pd.concat([filterd_hydro_data, df.loc[mask]])
 
@@ -73,7 +101,9 @@ for i in range(len(filterd_hydro_data)):
 # extract rho_100_cm from df['date_time']
 rhoa = [all_data[i] for i in index]
 filterd_hydro_data['rhoa'] = rhoa
+
 # %%
+filterd_hydro_data = filterd_hydro_data[(filterd_hydro_data['date_time'] > '2024-10-01 00:00:00')]
 # filterd_hydro_data = pd.read_csv('filterd_hydro_data_E1.csv')
 # Extracting the relevant columns
 x_data = filterd_hydro_data['mean_1m']

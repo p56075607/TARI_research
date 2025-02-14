@@ -224,21 +224,38 @@ df_picking = pd.DataFrame({'xs': x1s, 'rhoa_ini': rhoa_ini, 'rhoa_sat': rhoa_sat
                            'diff_rhoa': np.array(rhoa_ini)-np.array(rhoa_sat), 
                            'xrange':maxx,'slope': slopes})
 # df_picking = df_picking[df_picking['xrange']>24*3]
-
+plt.rcParams['font.family'] = 'Microsoft YaHei'
 # plot the picking slope histogram
 fig, ax = plt.subplots(figsize=(15, 5))
 ax.plot(df_picking['xs'],df_picking['slope'],'o',color='k',markersize=10)
+fz_minor = 25
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+plt.xticks(fontsize=fz_minor,rotation=45, ha='right', rotation_mode='anchor',fontweight='bold')
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%m'))
+ax.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
+ax.yaxis.get_offset_text().set_fontsize(fz_minor)
 ax2 = ax.twinx()
 ax2.plot(df_RHOA.index, np.log10(df_RHOA['RHOA']), 'ro',markersize=3 ,zorder=2)
 ax.grid(True, which='major', linestyle='--', linewidth=0.5)
 fontsize = 20
-ax.set_ylabel(r'乾燥斜率 ($\Delta log(\rho_a)/\Delta hr$)', fontsize=fontsize)
-ax2.set_ylabel(r'視電阻率 $log(\rho_a)$', fontsize=fontsize)
-ax.set_xlabel(r'時間', fontsize=fontsize)
+ax.set_ylabel('乾燥斜率'+'\n'+r'($\Delta log(\rho_a)/\Delta hr$)', fontsize=fontsize+5,fontweight='bold')
+ax2.set_ylabel('視電阻率'+'\n'+r'$log(\rho_a)$', fontsize=fontsize+5,fontweight='bold')
 ax.grid(True, which='major', linestyle='--', linewidth=0.5)
-plt.xticks(fontsize=15)
-plt.yticks(fontsize=15)
-plt.show()
+# set xy ticks label fontsize 
+ax.tick_params(axis='both', which='major', length=10,width=3, direction='in')
+ax.tick_params(axis='both', which='minor', length=5,width=1.5, direction='in')
+ax.set_xlabel('Time (2024/mm)', fontsize=fz_minor, fontweight='bold')
+width = 3
+ax.spines['top'].set_linewidth(width)
+ax.spines['right'].set_linewidth(width)
+ax.spines['bottom'].set_linewidth(width)
+ax.spines['left'].set_linewidth(width)
+ax.grid(True, which='minor', linestyle='--', linewidth=0.5)
+ax.grid(True, which='major', linestyle='-', linewidth=1)
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+# plt.show()
+fig.savefig(r'C:\Users\Git\TARI_research\picking\E2_picking.png', dpi=300, bbox_inches='tight')
+
 # %%
 # # plot the picking slope histogram
 # fig, ax = plt.subplots(figsize=(5, 5))
@@ -267,7 +284,7 @@ df_picking_E3 = pd.read_csv(r'C:\Users\Git\TARI_research\picking\E3_picking.csv'
 # df_picking = pd.concat([df_picking_E1, df_picking_E2], axis=0)
 # plot the picking slope histogram
 fig, ax = plt.subplots(figsize=(10, 10))
-plt.rcParams['font.family'] = 'Microsoft JhengHei'
+plt.rcParams['font.family'] = 'Microsoft YaHei'
 
 def linear_regression(x, y,data_name):
     # 計算線性回歸
@@ -275,9 +292,9 @@ def linear_regression(x, y,data_name):
     
     # 計算 CR 值
     r, p_value = pearsonr(x, np.log10(y))
-    ax.scatter(x,y,label=data_name)
+    ax.scatter(x,y,label=data_name,edgecolors='k')
     y_pred = intercept + slope * x
-    ax.plot(x, y_pred,alpha=0.5, label='相關係數:{:.2f}'.format(r))
+    ax.plot(x, y_pred,alpha=1,linewidth=2, label='相關係數:{:.2f}'.format(r))
     # ax.text(max(x),min(y) ,f'y = {slope:.2f}x + {intercept:.2f}\n$R^2$ = {r_squared:.2f}', fontsize=12)
     
     return slope, intercept
@@ -285,23 +302,31 @@ def linear_regression(x, y,data_name):
 
 # E1 
 slope, intercept = linear_regression( np.log10(df_picking_E1['rhoa_sat']),df_picking_E1['slope'],'水田')
-
+print(slope)
 # E2
 slope, intercept = linear_regression( np.log10(df_picking_E2['rhoa_sat']),df_picking_E2['slope'],'旱田')
-
+print(slope)
 # E3
 slope, intercept = linear_regression(np.log10(df_picking_E3['rhoa_sat']), df_picking_E3['slope'], '竹塘')
-
+print(slope)
 # ax.semilogy(df_picking['slope'], df_picking['rhoa_sat'], 'o', color='k', markersize=10)
-fontsize = 20
-ax.set_title('濕潤狀態 vs 乾燥斜率', fontsize=fontsize)
-ax.set_ylabel(r'乾燥斜率 ($\Delta log(\rho_a)/\Delta hr$)', fontsize=fontsize)
-ax.set_xlabel(r'濕潤狀態 $log(\rho_a)$', fontsize=fontsize)
-ax.grid(True, which='major', linestyle='--', linewidth=0.5)
-ax.legend( fontsize=15)
-plt.ticklabel_format(style='sci', scilimits=(0,0), axis='x')
-plt.xticks(fontsize=15)
-plt.yticks(fontsize=15)
+fontsize = 25
+ax.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
+ax.yaxis.get_offset_text().set_fontsize(fz_minor)
+ax.set_ylabel(r'乾燥斜率 ($\Delta log(\rho_a)/\Delta hr$)', fontsize=fontsize,fontweight='bold')
+ax.set_xlabel(r'電阻率 $log(\rho_a)$', fontsize=fontsize,fontweight='bold')
+font = matplotlib.font_manager.FontProperties(size=fontsize-5, weight='bold')
+ax.legend( prop=font)
+ax.tick_params(axis='both', which='major', length=10,width=3, direction='in')
+ax.tick_params(axis='both', which='minor', length=5,width=1.5, direction='in')
+width = 3
+ax.spines['top'].set_linewidth(width)
+ax.spines['right'].set_linewidth(width)
+ax.spines['bottom'].set_linewidth(width)
+ax.spines['left'].set_linewidth(width)
+ax.grid(True, which='major', linestyle='--', linewidth=1)
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+plt.xticks(fontsize=fz_minor,fontweight='bold')
 plt.show()
 fig.savefig(join('drying_slope_vs_wet_state.png'), dpi=300, bbox_inches='tight')
 # %%

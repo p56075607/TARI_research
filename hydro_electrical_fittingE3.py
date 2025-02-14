@@ -8,6 +8,8 @@ from datetime import datetime
 import pygimli as pg
 from scipy.optimize import curve_fit
 from pygimli.physics import ert  # the module
+import matplotlib.dates as mdates
+from datetime import datetime, timedelta
 # %%
 # input csv file 
 df = pd.read_csv("data\external\竹塘水田.csv")
@@ -42,13 +44,20 @@ ax.plot(df.index, df["mean_1m"], label="mean_1m")
 #     data['rhoa'] = k * data['r']
 #     all_data.append(data['rhoa'][0])
 #     dates.append(pd.to_datetime(datetime.strptime(output_folder_name[:8] , '%y%m%d%H')))
-# Import ERT data
-# read the dates and median_RHOA_E1 from the pickle file
-df_RHOA = pd.read_csv(join('picking','RHOA_E3_Tcorrected.csv'))
-ohmfiles = df_RHOA['RHOA']
-all_data = list(df_RHOA['RHOA'])
-df_RHOA['date'] = pd.to_datetime(df_RHOA['date'])
-dates = list(df_RHOA['date'])
+
+# save all_data and dates to a pickle file
+
+# with open(join('picking', 'RHOA_E3_local.pickle'), 'wb') as f:
+#     pickle.dump([all_data, dates], f)
+# load all_data and dates from a pickle file
+# with open(join('picking', 'RHOA_E3_local.pickle'), 'rb') as f:
+#     all_data, dates = pickle.load(f)
+
+# %%
+import pickle
+with open(join(r'C:\Users\Git\masterdeg_programs\pyGIMLi\field data\TARI_monitor','median_RHOA_E3_and_date.pkl'), 'rb') as f:
+    dates = pickle.load(f)
+    all_data = pickle.load(f)
 # %%
 # rho_100_cm = []
 # mesh_filter = (para_domain.cellCenters()[:,1]>-1)
@@ -58,7 +67,7 @@ dates = list(df_RHOA['date'])
 
 # Extract df data from dates
 filterd_hydro_data = pd.DataFrame( columns=df.columns )
-for i in range(len(ohmfiles)):
+for i in range(len(dates)):
     mask = (df['date_time'] == dates[i])
     filterd_hydro_data = pd.concat([filterd_hydro_data, df.loc[mask]])
 
@@ -87,7 +96,7 @@ ax.scatter(x_data, y_data, c=np.linspace(1,len(filterd_hydro_data),len(filterd_h
 fig, ax = plt.subplots(figsize=(21,8))
 ax.scatter(filterd_hydro_data['date_time'], filterd_hydro_data['mean_1m'],s=2, label="mean_1m")
 ax2 = ax.twinx()
-ax2.scatter(filterd_hydro_data['date_time'], filterd_hydro_data['rhoa'],c='r',s=2, label="RHOA")  
+ax2.scatter(filterd_hydro_data['date_time'], -filterd_hydro_data['rhoa'],c='r',s=2, label="RHOA")  
 ax.grid(True, which='major', linestyle='--', linewidth=0.5)
 # %%
 # Extracting the relevant columns
@@ -147,26 +156,74 @@ plt.yticks(fontsize=fontsize,fontweight='bold')
 ax.tick_params(axis='both', which='major', length=10,width=3, direction='in')
 # plt.show()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # colorbar
-# cb = fig.colorbar(scatter1)
-# # set ylabels
-# # cb.ax.set_yticklabels()
 # export filterd_hydro_data to csv
 # filterd_hydro_data.to_csv('filterd_hydro_data.csv', index=False, columns= ['date_time', 'mean_1m', 'rho_100_cm'])
 # %%
+date_start = '2024-06-02 01:00:00'#'2024-05-13 03:00:00'
+date_end  =  '2024-06-08 16:00:00'#'2024-05-16 11:00:00'
+filterd_data = filterd_hydro_data[(filterd_hydro_data['date_time'] >= date_start)]
+filterd_data =       filterd_data[(filterd_hydro_data['date_time'] <= date_end  )]
+SWC_diff = []
+def log_model_inverse(y, a, b):
+    return np.exp((y - b) / a)
+
+for j in range(len(filterd_data)-1):
+    diff = (log_model_inverse(filterd_data['rhoa'][j+1], a, b) - log_model_inverse(filterd_data['rhoa'][0], a, b))/100
+
+    SWC_diff.append(diff)
+
+# Plot water_m2 time-series
+fig, ax = plt.subplots(figsize=(15, 8))
+ax.plot(filterd_data['date_time'][1:], SWC_diff, '-o',color='k', linewidth=3, markersize=10, label='ERT')
+
+index = filterd_data['date_time'] == datetime.strptime(date_start, '%Y-%m-%d %H:%M:%S')
+filterd_data['SWChange_hydro'] = (filterd_data['mean_1m']-list(filterd_data['mean_1m'][index])[0])/100
+ax.plot(filterd_data['date_time'], filterd_data['SWChange_hydro'], 
+        '-or', linewidth=3, markersize=10, label='Contact Sensor')
+ax.legend(fontsize=20)
+# ax.set_ylim([0,0.06])
+ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+ax.xaxis.set_minor_locator(mdates.HourLocator(interval=2))
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
+# set xy ticks label fontsize 
+fz_minor = 30
+plt.xticks(fontsize=fz_minor,rotation=45, ha='right', rotation_mode='anchor',fontweight='bold')
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+
+ax.tick_params(axis='both', which='major', length=10,width=3, direction='in')
+ax.tick_params(axis='both', which='minor', length=5,width=1.5, direction='in')
+ax.set_xlabel('Date (2024/mm/dd)', fontsize=fz_minor, fontweight='bold')
+ax.set_ylabel('Water Change ($m^3$)', fontsize=fz_minor, fontweight='bold')
+width = 3
+ax.spines['top'].set_linewidth(width)
+ax.spines['right'].set_linewidth(width)
+ax.spines['bottom'].set_linewidth(width)
+ax.spines['left'].set_linewidth(width)
+ax.grid(True, which='minor', linestyle='--', linewidth=0.5)
+ax.grid(True, which='major', linestyle='-', linewidth=1)
+
+# Extract filterd_hydro_data['SWChange_hydro'] from 2024/10/10 10:00 to 2024/10/14 14:00
+start_time = pd.Timestamp('2024-06-03 11:00')
+end_time =   pd.Timestamp('2024-06-18 13:00')
+# start_time = pd.Timestamp('2024-11-02 06:00')
+# end_time = pd.Timestamp('2024-11-07 00:00')
+filtered_df = filterd_data[(filterd_data['date_time'] >= start_time) & (filterd_data['date_time'] <= end_time)]
+filtered_df['time_delta'] = (filterd_data['date_time'] - filterd_data['date_time'].min()).dt.total_seconds() / 3600
+x = filtered_df['time_delta'].values
+y = filtered_df['SWChange_hydro'].values
+coefficients = np.polyfit(x, y, 1)
+slope, intercept = coefficients
+# Define the start datetime
+start_datetime = datetime.strptime('2024-06-03 11:00', '%Y-%m-%d %H:%M')
+# start_datetime = datetime.strptime('2024/11/02 06:00', '%Y/%m/%d %H:%M')
+# Initialize an empty list to store the datetime objects
+THMC_time = []
+num = 60
+x_delta = np.linspace(0,2*(num-1),num)
+
+# Loop to generate 200 datetime objects with 1-hour intervals
+for i in range(len(x_delta)):
+    # Append the current datetime to the list
+    THMC_time.append(start_datetime + timedelta(hours=i*2))
+ax.plot(THMC_time, slope * x_delta + intercept, 
+        '--k',alpha=0.2, linewidth=3, markersize=10, label='Water Change from Contact Sensor')

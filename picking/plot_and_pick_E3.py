@@ -254,21 +254,37 @@ df_picking = pd.DataFrame({'xs': x1s, 'rhoa_ini': rhoa_ini, 'rhoa_sat': rhoa_sat
                            'diff_rhoa': np.array(rhoa_ini)-np.array(rhoa_sat), 
                            'xrange':maxx,'slope': slopes})
 # df_picking = df_picking[df_picking['xrange']>24*3]
-
+plt.rcParams['font.family'] = 'Microsoft YaHei'
 # plot the picking slope histogram
 fig, ax = plt.subplots(figsize=(15, 5))
 ax.plot(df_picking['xs'],df_picking['slope'],'o',color='k',markersize=10)
+fz_minor = 25
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+plt.xticks(fontsize=fz_minor,rotation=45, ha='right', rotation_mode='anchor',fontweight='bold')
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%m'))
+ax.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
+ax.yaxis.get_offset_text().set_fontsize(fz_minor)
 ax2 = ax.twinx()
 ax2.plot(df_RHOA.index, np.log10(df_RHOA['RHOA']), 'ro',markersize=3 ,zorder=2)
 ax.grid(True, which='major', linestyle='--', linewidth=0.5)
 fontsize = 20
-ax.set_ylabel(r'乾燥斜率 ($\Delta log(\rho_a)/\Delta hr$)', fontsize=fontsize)
-ax2.set_ylabel(r'視電阻率 $log(\rho_a)$', fontsize=fontsize)
-ax.set_xlabel(r'時間', fontsize=fontsize)
+ax.set_ylabel('乾燥斜率'+'\n'+r'($\Delta log(\rho_a)/\Delta hr$)', fontsize=fontsize+5,fontweight='bold')
+ax2.set_ylabel('視電阻率'+'\n'+r'$log(\rho_a)$', fontsize=fontsize+5,fontweight='bold')
 ax.grid(True, which='major', linestyle='--', linewidth=0.5)
-plt.xticks(fontsize=15)
-plt.yticks(fontsize=15)
-plt.show()
+# set xy ticks label fontsize 
+ax.tick_params(axis='both', which='major', length=10,width=3, direction='in')
+ax.tick_params(axis='both', which='minor', length=5,width=1.5, direction='in')
+ax.set_xlabel('Time (2024/mm)', fontsize=fz_minor, fontweight='bold')
+width = 3
+ax.spines['top'].set_linewidth(width)
+ax.spines['right'].set_linewidth(width)
+ax.spines['bottom'].set_linewidth(width)
+ax.spines['left'].set_linewidth(width)
+ax.grid(True, which='minor', linestyle='--', linewidth=0.5)
+ax.grid(True, which='major', linestyle='-', linewidth=1)
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+# plt.show()
+fig.savefig(r'C:\Users\Git\TARI_research\picking\E3_picking.png', dpi=300, bbox_inches='tight')
 # %%
 fig, ax = plt.subplots(figsize=(10, 8))
 
