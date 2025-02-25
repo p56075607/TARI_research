@@ -11,12 +11,19 @@ from pygimli.physics import ert
 import itertools
 
 # %%
-electrode_x = [0,1,1.5,2,2.5,3,
+# electrode_x = [0,1,1.5,2,2.5,3,
+#                5,7,9,11,13,15,17,
+#                18,19,19.5,20,20.5,21,
+#                23,25,27,29,31,33,35,
+#                37,38,38.5,39,39.5,40]
+# electrode_y = np.zeros(32)
+electrode_x = [1,3,
                5,7,9,11,13,15,17,
-               18,19,19.5,20,20.5,21,
+               19,21,
                23,25,27,29,31,33,35,
-               37,38,38.5,39,39.5,40]
-electrode_y = np.zeros(32)
+               37,39]
+electrode_y = np.zeros(20)
+
 fig, ax = plt.subplots()
 ax.plot(electrode_x, electrode_y,'kv',label='Electrode')
 def comprehensive_array(n):
@@ -120,7 +127,7 @@ tlmgr.invert(mesh=mesh2, lam=100,zWeight=1, maxIter=40,verbose=True)
 # %%
 kw_appres = dict(cMin=rho1, cMax=rho2, cMap='jet', logScale=True, orientation='vertical',
                     ylabel='Array type and \nElectrode separation (m)')
-kw_compare = dict(cMin=-50, cMax=50, cMap='bwr',
+kw_compare = dict(cMin=-30, cMax=30, cMap='bwr',
                   label=r'$\Delta \rho$ (%)',
                   xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical')
 fig, ax = plt.subplots(figsize=(3*10, 6*4), 
@@ -169,10 +176,11 @@ for n,inf_depth in enumerate(inf_depths):
                     return np.ma.masked_array(np.interp(value, x, y))
 
             clim = [kw_compare['cMin'], kw_compare['cMax']]
-            midnorm=StretchOutNormalize(vmin=clim[0], vmax=clim[1], low=-10, up=10)
+            midnorm=StretchOutNormalize(vmin=clim[0], vmax=clim[1], low=-0, up=0)
             triang = matplotlib.tri.Triangulation(tlmgr.pd.cellCenter()[:,0], tlmgr.pd.cellCenter()[:,1])
             rho_diff = 100*(np.log10(tlmgr.models[n])-np.log10(tlmgr.models[0]))/np.log10(tlmgr.models[0])
             # rho_diff[(rho_diff >= low) & (rho_diff <= up)] = 1e-10
+            print(max(rho_diff))
             cax = ax[n,2].tricontourf(triang, rho_diff,
                                 cmap=kw_compare['cMap'], levels=levels,
                                 norm=midnorm)
@@ -192,7 +200,7 @@ for n,inf_depth in enumerate(inf_depths):
             ax[n, 2].add_patch(plt.Polygon(triangle_left,color='white'))
             ax[n, 2].add_patch(plt.Polygon(triangle_right,color='white'))   
             interface2 = mt.createLine(start=[left, inf_depth], end=[right, inf_depth])
-            ax[n,2].plot(pg.x(interface2.nodes()),pg.y(interface2.nodes()),'--w')
+            ax[n,2].plot(pg.x(interface2.nodes()),pg.y(interface2.nodes()),'--k')
         else:
             pg.show(tlmgr.pd, 
                 100*(tlmgr.models[n]-tlmgr.models[0])/tlmgr.models[0],ax=ax[n,2],
