@@ -22,7 +22,8 @@ def calculate_irrigation_water(slope, intercept, sat_theta, irrig_theta, a, b, T
     total_rhos (numpy.ndarray): 總電阻率數據
     """
     irrig_rhoa = np.log10(a * np.log(irrig_theta) + b)
-    rhoa_min = np.log10(a * np.log(sat_theta) + b)
+    rhoa_min = np.log10(100)#np.log10(a * np.log(sat_theta) + b)
+    sat_theta = np.exp(((10**rhoa_min)-b)/a)
     rho = np.log10(a * np.log(80) + b)
     t = 0
     rhos = []

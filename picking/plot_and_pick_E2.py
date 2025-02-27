@@ -307,8 +307,8 @@ print(slope)
 slope, intercept = linear_regression( np.log10(df_picking_E2['rhoa_sat']),df_picking_E2['slope'],'旱田')
 print(slope)
 # E3
-slope, intercept = linear_regression(np.log10(df_picking_E3['rhoa_sat']), df_picking_E3['slope'], '竹塘')
-print(slope)
+# slope, intercept = linear_regression(np.log10(df_picking_E3['rhoa_sat']), df_picking_E3['slope'], '竹塘')
+# print(slope)
 # ax.semilogy(df_picking['slope'], df_picking['rhoa_sat'], 'o', color='k', markersize=10)
 fontsize = 25
 ax.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
