@@ -1,0 +1,9 @@
+E1:
+  window: "RHOA_data/農試所水田/E1_window.csv"
+  rhoa: "RHOA_data/農試所水田/E1_rhoa.csv"
+E2:
+  window: "RHOA_data/農試所旱田/E2_window.csv"
+  rhoa: "RHOA_data/農試所旱田/E2_rhoa.csv"
+E3:
+  window: "RHOA_data/竹塘水田/E3_window.csv"
+  rhoa: "RHOA_data/竹塘水田/E3_rhoa.csv"

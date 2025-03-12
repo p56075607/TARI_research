@@ -12,6 +12,7 @@ import numpy as np
 # df_RHOA = pd.read_csv(join('RHOA_data', '農試所水田', 'E1_rhoa.csv'))
 df_window = pd.read_csv(join('RHOA_data', '農試所旱田', 'E2_window.csv'))
 df_RHOA = pd.read_csv(join('RHOA_data', '農試所旱田', 'E2_rhoa.csv'))
+
 df_RHOA = df_RHOA[df_RHOA['median_RHOA']>0]
 # 將時間欄位轉換為 datetime 格式
 df_window['x'] = pd.to_datetime(df_window['x'])

@@ -6,7 +6,7 @@ from pygimli.physics import ert  # the module
 import matplotlib.pyplot as plt
 plt.rcParams['font.family'] = 'Microsoft JhengHei'
 import matplotlib
-# matplotlib.use('TkAgg')
+matplotlib.use('TkAgg')
 import pickle
 import matplotlib.dates as mdates
 from datetime import datetime

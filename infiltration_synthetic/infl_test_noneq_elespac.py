@@ -88,7 +88,7 @@ for n,inf_depth in enumerate(inf_depths):
     world = mt.createWorld(start=[left, 0], end=[right, -depth],
                         layers=[inf_depth], 
                         worldMarker=True)
-    mesh = mt.createMesh(world, quality=34, area=0.01)
+    mesh = mt.createMesh(world, area=0.01)
     # ax, cb = pg.show(mesh, markers=True,**kw)
     if (n == 1) :#| (n == 2):
         rhomap = [[0, rho1], [2, rho2]]
