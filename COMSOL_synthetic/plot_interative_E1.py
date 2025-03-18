@@ -1,4 +1,4 @@
-# -*- coding: big5 -*-
+
 # %%
 import pandas as pd
 import numpy as np
@@ -7,7 +7,7 @@ from pygimli.physics import ert  # the module
 import matplotlib.pyplot as plt
 plt.rcParams['font.family'] = 'Times New Roman'#'Microsoft Sans Serif'
 import matplotlib
-matplotlib.use('TkAgg')  # ³]¸m«áºİ¬° TkAgg
+matplotlib.use('TkAgg')  # è¨­ç½®å¾Œç«¯ç‚º TkAgg
 import pickle
 import matplotlib.dates as mdates
 from datetime import datetime
@@ -63,20 +63,20 @@ median_RHOA_E1 = pickled_median_RHOA_E1
      
 import pandas as pd
 # def read_hydro_data(data_path):
-#     df = pd.read_excel(data_path, sheet_name='¹A¸Õ©Ò(Ãú®p)«B¶q¸ê®Æ')
+#     df = pd.read_excel(data_path, sheet_name='è¾²è©¦æ‰€(éœ§å³°)é›¨é‡è³‡æ–™')
 
-#     # ±N'TIME'¦CÂà´«¬°¤é´Á®É¶¡®æ¦¡
+#     # å°‡'TIME'åˆ—è½‰æ›ç‚ºæ—¥æœŸæ™‚é–“æ ¼å¼
 #     df['TIME'] = pd.to_datetime(df['TIME'])
 #     df.set_index('TIME', inplace=True)
 
-#     # ±N'Rain(mm)'¦CÂà´«¬°¼Æ¦r¡AµLªkÂà´«ªº³]¸m¬°NaN¡AµM«á¥á±óNaN­È
+#     # å°‡'Rain(mm)'åˆ—è½‰æ›ç‚ºæ•¸å­—ï¼Œç„¡æ³•è½‰æ›çš„è¨­ç½®ç‚ºNaNï¼Œç„¶å¾Œä¸Ÿæ£„NaNå€¼
 #     df['Rain(mm)'] = pd.to_numeric(df['Rain(mm)'], errors='coerce')
 #     df.dropna(subset=['Rain(mm)'], inplace=True)
     
 #     daily_rainfall = df['Rain(mm)']
 #     return daily_rainfall
 
-# daily_rainfall = read_hydro_data(r'C:\Users\Git\TARI_research\data\external\¤ô¤å¯¸¸ê®Æ·J¾ã_20240909.xlsx')
+# daily_rainfall = read_hydro_data(r'C:\Users\Git\TARI_research\data\external\æ°´æ–‡ç«™è³‡æ–™å½™æ•´_20240909.xlsx')
 
 rain_df = pd.read_csv(r'C:\Users\Git\TARI_research\data\external\G2F820\merged_data.csv')
 rain_df['Time'] = pd.to_datetime(rain_df['Time'])
@@ -85,7 +85,7 @@ daily_rainfall = rain_df['Precp']
 # %%
 fig, ax = plt.subplots(figsize=(25, 8))
 
-median_rhoa_plot, = ax.plot(dates_E1, median_RHOA_E1, 'ro',markersize=3 ,zorder=2)
+median_rhoa_plot, = ax.plot(dates_E1, (median_RHOA_E1), 'ro',markersize=3 ,zorder=2)
 ax.xaxis.set_major_locator(mdates.DayLocator(interval=7))
 ax.xaxis.set_minor_locator(mdates.DayLocator(interval=1))
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
@@ -177,19 +177,19 @@ ax2.spines['right'].set_linewidth(width)
 ax2.spines['bottom'].set_linewidth(width)
 ax2.spines['left'].set_linewidth(width)
 fig.savefig('TARI_E1_irg_timeseries.png', dpi=300, bbox_inches='tight')
-#¨Ï¥Î matplotlib.widgets.Cursor ¨ÓÅã¥Ü´å¼Ğ
+#ä½¿ç”¨ matplotlib.widgets.Cursor ä¾†é¡¯ç¤ºæ¸¸æ¨™
 cursor = Cursor(ax, useblit=True, color='gray', linewidth=1)
 
-# ÀË¬d QApplication ¬O§_¤wªì©l¤Æ
+# æª¢æŸ¥ QApplication æ˜¯å¦å·²åˆå§‹åŒ–
 app = QApplication.instance()
 if app is None:
     app = QApplication(sys.argv)
 
-selected_points = []  # ¥Î©ó¦sÀx¿ï¨úªº®y¼Ğ
+selected_points = []  # ç”¨æ–¼å­˜å„²é¸å–çš„åº§æ¨™
 all_mgrs = []
 date_folder_names = []
-fig2 = None  # ¥Î©ó¦sÀx²Ä¤G±i¹Ïªº¤Ş¥Î
-clicked_annotations = [] # ÅÜ¶q¨Ó°l?ÂIÀ»ªºª¬ºA
+fig2 = None  # ç”¨æ–¼å­˜å„²ç¬¬äºŒå¼µåœ–çš„å¼•ç”¨
+clicked_annotations = [] # è®Šé‡ä¾†è¿½?é»æ“Šçš„ç‹€æ…‹
 
 annotation = ax.annotate("", xy=(0,0), xytext=(20,20),
                          textcoords="offset points",
@@ -198,7 +198,7 @@ annotation = ax.annotate("", xy=(0,0), xytext=(20,20),
 annotation.set_visible(False)
 
 def motion_hover(event):
-    if event.inaxes == ax:  # ½T«OÂIÀ»µo¥Í¦b ax ¤W
+    if event.inaxes == ax:  # ç¢ºä¿é»æ“Šç™¼ç”Ÿåœ¨ ax ä¸Š
         if plt.get_current_fig_manager().toolbar.mode != '':
                 return
         annotation_visbility = annotation.get_visible()
@@ -207,14 +207,14 @@ def motion_hover(event):
             if is_contained:
                 data_point_location = median_rhoa_plot.get_data()
                 x_data, y_data = data_point_location
-                x_data = mdates.date2num(x_data)  # ½T«O x_data ¬O¼Æ­ÈÃş«¬
+                x_data = mdates.date2num(x_data)  # ç¢ºä¿ x_data æ˜¯æ•¸å€¼é¡å‹
                 annotation.xy = (x_data[annotation_index['ind'][0]], y_data[annotation_index['ind'][0]])
 
                 text_label = f'({mdates.num2date(x_data[annotation_index["ind"][0]]).strftime("%Y/%m/%d %H:%M")}, {y_data[annotation_index["ind"][0]]:.2f})'
                 annotation.set_text(text_label)
 
-                annotation.get_bbox_patch().set_facecolor('lightblue')  # ³]©w box ÃC¦â¬°²HÂÅ¦â
-                annotation.get_bbox_patch().set_alpha(0.6)  # ³]©w³z©ú«×¬° 0.6
+                annotation.get_bbox_patch().set_facecolor('lightblue')  # è¨­å®š box é¡è‰²ç‚ºæ·¡è—è‰²
+                annotation.get_bbox_patch().set_alpha(0.6)  # è¨­å®šé€æ˜åº¦ç‚º 0.6
 
                 annotation.set_visible(True)
                 fig.canvas.draw_idle()
@@ -225,12 +225,12 @@ def motion_hover(event):
 
 fig.canvas.mpl_connect('motion_notify_event', motion_hover)
 
-# ±Ò¥Îºu½üÁY©ñ¥\¯à
+# å•Ÿç”¨æ»¾è¼ªç¸®æ”¾åŠŸèƒ½
 def on_scroll(event):
     curr_xlim = ax.get_xlim()
     curr_ylim = ax.get_ylim()
-    xdata = event.xdata  # ºu½üªº x ®y¼Ğ
-    ydata = event.ydata  # ºu½üªº y ®y¼Ğ
+    xdata = event.xdata  # æ»¾è¼ªçš„ x åº§æ¨™
+    ydata = event.ydata  # æ»¾è¼ªçš„ y åº§æ¨™
     if event.button == 'up':
         scale_factor = 1 / 1.1
     elif event.button == 'down':
@@ -295,12 +295,12 @@ def load_inversion_results(save_ph):
     return mgr_dict
 
 def onclick(event):
-    if event.inaxes == ax:  # ½T«OÂIÀ»µo¥Í¦b ax ¤W
+    if event.inaxes == ax:  # ç¢ºä¿é»æ“Šç™¼ç”Ÿåœ¨ ax ä¸Š
         if plt.get_current_fig_manager().toolbar.mode != '':
             return
         x_click = event.xdata
         y_click = event.ydata
-        # ³]¸m¤@­Ó¦X²zªº¶ZÂ÷ìH­È
+        # è¨­ç½®ä¸€å€‹åˆç†çš„è·é›¢é–¾å€¼
         threshold_x = 0.1
         threshold_y = 0.1
         for x, y in zip(mdates.date2num(dates_E1), median_RHOA_E1):
@@ -314,7 +314,7 @@ def onclick(event):
                 selected_points.append((x_value, y))
                 print(f'Selected point: x = {x_value}, y = {y:.2f}')
 
-                # ³Ğ«Ø¤@­Ó·sªº annotation ¨Ã¨Ï¨ä¦bÂIÀ»¦ì¸m¥i¨£
+                # å‰µå»ºä¸€å€‹æ–°çš„ annotation ä¸¦ä½¿å…¶åœ¨é»æ“Šä½ç½®å¯è¦‹
                 click_annotation = ax.annotate(
                     text=f'({x_value}, {y:.2f})',
                     xy=(x_click, y_click),
@@ -342,7 +342,7 @@ def onclick(event):
                         cmap = +1
                     else:
                         cmap = -1
-                    print(selected_points[-2][0],'¡÷',selected_points[-1][0])
+                    print(selected_points[-2][0],'â†’',selected_points[-1][0])
                     draw_second_fig(all_mgrs, date_folder_names,cmap = cmap)
 
                 break
@@ -446,8 +446,8 @@ def plot_difference_contour(mgr1, mgr2, urf_file_name1, urf_file_name2,cmap):
     # kw_diff = dict(cMin=-10, cMax=10,logScale=False,
     #             label='Relative resistivity difference \n(%)',
     #             xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap='bwr')
-    colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # ±q¥Õ¦â¨ìÂÅ¦âªºÃC¦â²Õ¦X
-    nodes = [0, 0.9, 1]  # ½d³ò±q0¨ì-1¬O¥Õ¦â¡A-1¨ì-10¬O¥Õ¦â¨ìÂÅ¦âªºº¥ÅÜ
+    colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # å¾ç™½è‰²åˆ°è—è‰²çš„é¡è‰²çµ„åˆ
+    nodes = [0, 0.9, 1]  # ç¯„åœå¾0åˆ°-1æ˜¯ç™½è‰²ï¼Œ-1åˆ°-10æ˜¯ç™½è‰²åˆ°è—è‰²çš„æ¼¸è®Š
     custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))
 
     kw_diff = dict(cMin=-10, cMax=0,logScale=False,
@@ -499,14 +499,14 @@ def plot_difference_contour(mgr1, mgr2, urf_file_name1, urf_file_name2,cmap):
     return fig
 
 def draw_second_fig( all_mgrs, date_folder_name,cmap, **kw):
-    global fig2  # ¨Ï¥Î¥ş§½ÅÜ¶q¨Ó¤Ş¥Î fig2
+    global fig2  # ä½¿ç”¨å…¨å±€è®Šé‡ä¾†å¼•ç”¨ fig2
     if fig2 is not None:
-        plt.close(fig2)  # Ãö³¬¥ı«eªº¹Ï
-    # fig2 = plot_inverted_profile(all_mgrs[-1], date_folder_name, **kw)  # ½Õ¥Î¦Û©w¸qªº¨ç¼ÆÃ¸»s·s¹Ï
+        plt.close(fig2)  # é—œé–‰å…ˆå‰çš„åœ–
+    # fig2 = plot_inverted_profile(all_mgrs[-1], date_folder_name, **kw)  # èª¿ç”¨è‡ªå®šç¾©çš„å‡½æ•¸ç¹ªè£½æ–°åœ–
     fig2 = plot_difference_contour(all_mgrs[-2], all_mgrs[-1], date_folder_name[-2], date_folder_name[-1]
                                    ,cmap = cmap)  
     
-    # ²K¥[ ctrl+c ¥\¯à¥H½Æ»s¹Ï¹³¨ì°Å¶KÃ¯
+    # æ·»åŠ  ctrl+c åŠŸèƒ½ä»¥è¤‡è£½åœ–åƒåˆ°å‰ªè²¼ç°¿
     def clipboard_handler(event):
         if event.key == 'ctrl+c':
             buf = io.BytesIO()
@@ -519,7 +519,7 @@ def draw_second_fig( all_mgrs, date_folder_name,cmap, **kw):
 
     fig2.canvas.mpl_connect('key_press_event', clipboard_handler)
 
-# ²K¥[ ctrl+c ¥\¯à¥H½Æ»s¹Ï¹³¨ì°Å¶KÃ¯
+# æ·»åŠ  ctrl+c åŠŸèƒ½ä»¥è¤‡è£½åœ–åƒåˆ°å‰ªè²¼ç°¿
 def fig_clipboard_handler(event):
     if event.key == 'ctrl+c':
         buf = io.BytesIO()
@@ -532,18 +532,18 @@ def fig_clipboard_handler(event):
 
 fig.canvas.mpl_connect('key_press_event', fig_clipboard_handler)
 
-# ³s±µÂIÀ»¨Æ¥ó
+# é€£æ¥é»æ“Šäº‹ä»¶
 fig.canvas.mpl_connect('button_press_event', onclick)
 
-# Àò¨ú Tkinter ªº¹Ï§Îµ¡¤f¨Ã³]¸m¦ì¸m
+# ç²å– Tkinter çš„åœ–å½¢çª—å£ä¸¦è¨­ç½®ä½ç½®
 manager = plt.get_current_fig_manager()
 manager.window.wm_geometry("+0+0")
 plt.subplots_adjust(right=0.95,left=0.05,top=0.95,bottom=0.15)
-plt.show()  # Åã¥Ü¹Ï§Î
+plt.show()  # é¡¯ç¤ºåœ–å½¢
 
 
 
-# ¦b¹Ï§Îµ¡¤fÃö³¬«á¥´¦L©Ò¦³¿ï¨úªºÂI
+# åœ¨åœ–å½¢çª—å£é—œé–‰å¾Œæ‰“å°æ‰€æœ‰é¸å–çš„é»
 print("All selected points:")
 for point in selected_points:
     print(f'x = {point[0]}, y = {point[1]:.2f}')
@@ -605,8 +605,8 @@ save_ph = join(output_path,output_folders[begin_index])
 all_mgrs.append(load_inversion_results(save_ph))
 
 current_index = 44
-colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # ±q¥Õ¦â¨ìÂÅ¦âªºÃC¦â²Õ¦X
-nodes = [0, 0.9, 1]  # ½d³ò±q0¨ì-1¬O¥Õ¦â¡A-1¨ì-10¬O¥Õ¦â¨ìÂÅ¦âªºº¥ÅÜ
+colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # å¾ç™½è‰²åˆ°è—è‰²çš„é¡è‰²çµ„åˆ
+nodes = [0, 0.9, 1]  # ç¯„åœå¾0åˆ°-1æ˜¯ç™½è‰²ï¼Œ-1åˆ°-10æ˜¯ç™½è‰²åˆ°è—è‰²çš„æ¼¸è®Š
 custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))
 
 kw = dict(cMin=-10, cMax=0,logScale=False,
@@ -644,8 +644,8 @@ for i in range(len(every_diff_grid)):
     # Reshape diff_1819 to 2D and append along axis=1
     mean_diff = np.append(mean_diff, diff_1819[:, np.newaxis], axis=1)
 
-colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # ±q¥Õ¦â¨ìÂÅ¦âªºÃC¦â²Õ¦X
-nodes = [0, 0.8, 1]  # ½d³ò±q0¨ì-1¬O¥Õ¦â¡A-1¨ì-10¬O¥Õ¦â¨ìÂÅ¦âªºº¥ÅÜ
+colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # å¾ç™½è‰²åˆ°è—è‰²çš„é¡è‰²çµ„åˆ
+nodes = [0, 0.8, 1]  # ç¯„åœå¾0åˆ°-1æ˜¯ç™½è‰²ï¼Œ-1åˆ°-10æ˜¯ç™½è‰²åˆ°è—è‰²çš„æ¼¸è®Š
 custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))
 kw = dict(cMin=-8, cMax=0,logScale=False,
             label='Relative resistivity difference \n(%)',
@@ -710,7 +710,7 @@ ax2.set_xlim([dates_E1[begin_index], end_date])
 ax2.yaxis.set_tick_params(labelsize=fz_minor)
 plt.yticks(fontsize=fz_minor,fontweight='bold')
 
-plt.show()
+plt.draw()
 fig.savefig(join(save_folder,'TARI_E1_intensity.png'), dpi=300, bbox_inches='tight')
 # %%
 # Plot time series resistivity

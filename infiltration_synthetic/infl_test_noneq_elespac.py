@@ -9,6 +9,7 @@ import pygimli as pg
 import pygimli.meshtools as mt
 from pygimli.physics import ert
 import itertools
+import pandas as pd
 
 # %%
 # electrode_x = [0,1,1.5,2,2.5,3,
@@ -73,6 +74,38 @@ def comprehensive_array(n):
     return scheme
 
 scheme = comprehensive_array(len(electrode_x))
+# %%
+data = scheme
+mid, sep = ert.visualization.midconfERT(data)
+df = pd.DataFrame({'a':data['a'], 'b':data['b'], 'm':data['m'], 'n':data['n'], 'sep': sep})
+# calculate the number of sep in each range: 0~9999, 10000~19999, 20000~29999, 30000~39999, 40000~49999, 50000~59999
+df['sep_range'] = pd.cut(df['sep'], bins=np.arange(0, 70000, 10000), right=False)
+df['sep_range'].value_counts()
+df['sep_range'].value_counts().plot(kind='pie', autopct='%1.1f%%')
+# %%
+'''
+1) array type (Wenner-alpha/beta, Schlumberger, PP, PD, DD, MG)
+            00000: pole-pole
+            10000: pole-dipole or dipole-pole
+            30000: Wenner-alpha
+            40000: Schlumberger or Gradient
+            50000: dipole-dipole or Wenner-beta
+        2) potential dipole length (in electrode spacings)
+            .XX..: dipole length
+        3) separation factor (current dipole length or (di)pole separation)
+            ...XX: pole/dipole separation (PP,PD,DD,GR) or separation
+'''
+tpye_num = 30000
+df_selected = df[(df['sep'] > 0+tpye_num) & (df['sep'] < 10000+tpye_num)]
+# plot df_selected.iloc[0] ['a'] and ['b'] and ['m'] and ['n'] in 1D
+
+fig,ax = plt.subplots(figsize=(8,8))
+for ind in range(len(df_selected)):
+    ax.plot(df_selected.iloc[ind]['a'],ind, 'ro',markersize=10)
+    ax.plot(df_selected.iloc[ind]['b'],ind, 'yo',markersize=10)
+    ax.plot(df_selected.iloc[ind]['m'],ind, 'go',markersize=10)
+    ax.plot(df_selected.iloc[ind]['n'],ind, 'bo',markersize=10)
+    
 # %%
 left = 0
 right = 40
