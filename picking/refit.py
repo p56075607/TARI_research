@@ -410,7 +410,7 @@ else:
 # Plot intensity map
 # 設定繪圖參數
 colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # 從白色到藍色的顏色組合
-nodes = [0, 1-(-1/-10), 1]  
+nodes = [0, 1-(-1.5/-10), 1]  
 custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))     
 kw = dict(cMin=-10, cMax=0,logScale=False,
             label='Relative resistivity \ndifference (%)',
@@ -418,7 +418,7 @@ kw = dict(cMin=-10, cMax=0,logScale=False,
 
 Tmesh,Ymesh = np.meshgrid(filtered_data['delay_hours'][:-1],Y[:,0])
 fig, ax = plt.subplots(figsize=(8, 4))
-cf = ax.contourf(Tmesh, Ymesh, mean_along_x, cmap=kw['cMap'], levels=20,
+cf = ax.contourf(Tmesh, Ymesh, mean_along_x, cmap=kw['cMap'], levels=25,
             vmin=kw['cMin'], vmax=kw['cMax'], antialiased=True, zorder=1)
 ax.yaxis.set_major_locator(plt.MultipleLocator(1))
 ax.yaxis.set_minor_locator(plt.MultipleLocator(1))
@@ -432,7 +432,7 @@ plt.draw()
 # 添加顏色條
 cb = fig.colorbar(cf, pad=0.12)
 cb.ax.set_ylim(kw['cMin'],kw['cMax'])
-cb.ax.set_yticks(np.linspace(kw['cMin'], kw['cMax'], 9))
+cb.ax.set_yticks(np.linspace(kw['cMin'], kw['cMax'], 11))
 cb.ax.set_yticklabels(['{:.1f}'.format(x) for x in cb.ax.get_yticks()])
 cb.ax.set_ylabel(kw['label'],fontweight='bold',fontsize=title_font)
 
