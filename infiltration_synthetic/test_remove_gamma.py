@@ -17,8 +17,13 @@ import itertools
 
 # %%
 # load pg data
-path = r"D:\R2MSDATA\TARI_E1_test\output_second_inversion\24030215_m_E1\ERTManager\inverison_data.ohm"
-data = pg.load(path)
+# path = r"D:\R2MSDATA\TARI_E1_test\urf\24030215_m_E1.ohm"
+# data = pg.load(path)
+# data['k'] = ert.createGeometricFactors(data,numerical=True)
+# data['rhoa'] = data['r']*data['k']
+path = r'test1202-12.stg'
+data = ert.load(path)
+
 # %%
 electrode_x = np.arange(1,21,1)
 electrode_y = np.zeros(20)
@@ -293,32 +298,58 @@ def midconfERT(data, ind=None, rnum=1, circular=False, switch=False):
     mn_max = np.maximum(m[iabmn], n[iabmn])
     
     # M和N都在A和B之間
-    mn_between_ab = (mn_min >= ab_min) & (mn_max <= ab_max)
+    mn_between_ab = (mn_min > ab_min) & (mn_max < ab_max)
     
     # 特例：當AB包含在MN之間(MABN)時也視為alpha配置
-    ab_between_mn = (ab_min >= mn_min) & (ab_max <= mn_max)
+    ab_between_mn = (ab_min > mn_min) & (ab_max < mn_max)
+    
+    # 判斷A、B與M、N是否完全分開（beta配置的典型特徵）
+    ab_fully_separated = (ab_max < mn_min) | (mn_max < ab_min)
     
     # 同時滿足條件: A、B在MN中點兩側，且MN在AB之間或AB在MN之間
-    ialfa[iabmn] = opposite_sides & (mn_between_ab | ab_between_mn)
+    # 排除完全分開的情況（這應該屬於beta配置）
+    ialfa[iabmn] = opposite_sides & (mn_between_ab | ab_between_mn) & (~ab_fully_separated)
 
     # 設置alpha配置的中點和sep值
     mid[ialfa] = (m[ialfa] + n[ialfa]) / 2
     spac = np.minimum(bn[ialfa], bm[ialfa])
+    
     # 用於區分Wenner和Schlumberger的參數
+    # 計算AB和MN之間的關係
     abmn3 = np.round((3*mn[ialfa]-ab[ialfa])*mT)/mT
-    # 計算sep: 基礎距離 + 偶極長度修正 + 30000 + Schlumberger修正
-    sep[ialfa] = spac * mI + (mn[ialfa]-1) * mO * (abmn3 != 0) + \
-        3*mT + (abmn3 < 0)*mT
+    
+    # 計算AB和MN的中點
+    ab_mid = (a[ialfa] + b[ialfa]) / 2
+    mn_mid = (m[ialfa] + n[ialfa]) / 2
+    
+    # 判斷MN中點是否與AB中點對齊（考慮數值精度問題，使用近似相等）
+    midpoints_aligned = np.abs(ab_mid - mn_mid) < 1e-6
+    
+    # 特例：計算MABN配置中的AB和MN關係
+    # 判斷是否為MABN型態(AB在MN內)
+    is_mabn = (ab_min[ialfa] >= mn_min[ialfa]) & (ab_max[ialfa] <= mn_max[ialfa])
+    # 對MABN配置計算3×AB和MN的關係
+    abmn3_mabn = np.round((3*ab[ialfa]-mn[ialfa])*mT)/mT
+    
+    # 判斷Wenner-alpha條件：
+    # 常規情況: 3×MN = AB (abmn3 = 0) 且 MN中點與AB中點對齊
+    # 特殊情況: MABN且3×AB = MN (abmn3_mabn = 0) 且 AB中點與MN中點對齊
+    is_wenner = ((abmn3 == 0) & midpoints_aligned) | \
+               (is_mabn & (abmn3_mabn == 0) & midpoints_aligned)
+    
+    # 計算sep值:
+    # 如果是Wenner-alpha，使用30000
+    # 如果是Schlumberger，使用40000
+    # 其中加上基礎距離和偶極長度修正
+    sep[ialfa] = spac * mI + (mn[ialfa]-1) * mO * ((~is_wenner) | is_mabn) + \
+        3*mT + (~is_wenner)*mT
 
     # 4-point beta配置: dipole-dipole (50000) 或 Wenner-beta
     ibeta = np.copy(iabmn)
     
-    # 4. 改進 beta 配置判斷
-    # 判斷A、B與M、N是否完全分開（不交叉）
-    ab_fully_separated = (ab_max <= mn_min) | (mn_max <= ab_min)
-    
     # beta配置條件：AB和MN完全分開，且不是alpha配置
-    ibeta[iabmn] = ab_fully_separated & (~ialfa[iabmn])
+    # 這裡直接使用之前計算的ab_fully_separated
+    ibeta[iabmn] = ab_fully_separated
 
     # 圓形排列的特殊處理（保持原始代碼）
     if circular:
@@ -386,6 +417,20 @@ df = pd.DataFrame({'a':data['a'], 'b':data['b'], 'm':data['m'], 'n':data['n'], '
 df['sep_range'] = pd.cut(df['sep'], bins=np.arange(0, 80000, 10000), right=False)
 # Get the value counts from 'sep_range' column
 counts = df['sep_range'].value_counts()
+counts = counts[counts > 0]
+print(counts)
+
+# 建立區間到電極陣列名稱的對應關係
+array_names = {
+    pd.Interval(30000, 40000, closed='left'): 'Wenner',
+    pd.Interval(40000, 50000, closed='left'): 'Schlumberger & Gradient',
+    pd.Interval(50000, 60000, closed='left'): 'Dipole-dipole',
+    pd.Interval(60000, 70000, closed='left'): 'γ type'
+}
+
+# 重新命名索引
+counts.index = [array_names.get(idx, idx) for idx in counts.index]
+print(counts)
 
 # Define a function to calculate the absolute count from percentage
 def absolute_value(p):
@@ -393,33 +438,37 @@ def absolute_value(p):
     return int(round(p/100. * total))
 
 # Plot pie chart with custom autopct to show counts
-counts.plot(kind='pie', autopct=lambda p: '{:d}, {:1.1f}%'.format(absolute_value(p),p))
+plt.figure(figsize=(10, 7))
+counts.plot(kind='pie', autopct=lambda p: '{:d}, {:1.1f}%'.format(absolute_value(p),p), 
+            textprops={'fontsize': 12}, startangle=90)
+
 plt.ylabel('')  # Remove default ylabel for clarity
+plt.title('電極陣列類型分布', fontsize=14)
 plt.show()
 
 # %%
-tpye_num = 30000
+tpye_num = 50000
 df_selected = df[(df['sep'] > 0+tpye_num) & (df['sep'] < 10000+tpye_num)]
 # plot df_selected.iloc[0] ['a'] and ['b'] and ['m'] and ['n'] in 1D
 
-fig,ax = plt.subplots(figsize=(8,48))
-l = 1000
-for ind in range(0+l,1000+l):
-    ax.text(df_selected.iloc[ind]['a'], ind, 'a', color='white', ha='center', va='center')
-    ax.text(df_selected.iloc[ind]['b'], ind, 'b', color='white', ha='center', va='center')
-    ax.text(df_selected.iloc[ind]['m'], ind, 'm', color='white', ha='center', va='center')
-    ax.text(df_selected.iloc[ind]['n'], ind, 'n', color='white', ha='center', va='center')
-    ax.plot(df_selected.iloc[ind]['a'],ind, 'ro',markersize=10)
-    ax.plot(df_selected.iloc[ind]['b'],ind, 'yo',markersize=10)
-    ax.plot(df_selected.iloc[ind]['m'],ind, 'go',markersize=10)
-    ax.plot(df_selected.iloc[ind]['n'],ind, 'bo',markersize=10)
+fig,ax = plt.subplots(figsize=(8,20))
+l = 0
+for ind in range(0+l,100+l):
+    ax.text(pg.x(data)[df_selected.iloc[ind]['a']], ind, 'a', color='white', ha='center', va='center')
+    ax.text(pg.x(data)[df_selected.iloc[ind]['b']], ind, 'b', color='white', ha='center', va='center')
+    ax.text(pg.x(data)[df_selected.iloc[ind]['m']], ind, 'm', color='white', ha='center', va='center')
+    ax.text(pg.x(data)[df_selected.iloc[ind]['n']], ind, 'n', color='white', ha='center', va='center')
+    ax.plot(pg.x(data)[df_selected.iloc[ind]['a']],ind, 'ro',markersize=10)
+    ax.plot(pg.x(data)[df_selected.iloc[ind]['b']],ind, 'yo',markersize=10)
+    ax.plot(pg.x(data)[df_selected.iloc[ind]['m']],ind, 'go',markersize=10)
+    ax.plot(pg.x(data)[df_selected.iloc[ind]['n']],ind, 'bo',markersize=10)
     # ax.set_xlim(min(pg.x(data)),max(pg.x(data)))
     # ax.set_ylim(0,len(df_selected))
 
 # %%
 mesh_path = r"D:\R2MSDATA\TARI_E1_test\output_second_inversion\24030215_m_E1\ERTManager\mesh.bms"
 mesh = pg.load(mesh_path)
-lam = 100
+lam = 1000
 mgr = ert.ERTManager(data)
 model = mgr.invert(data,mesh=mesh,
                     lam=lam  ,zWeight=1,
@@ -439,22 +488,33 @@ kw = dict(label='Resistivity $\Omega m$',
             orientation = 'vertical')
 mgr.showResult(**kw)
 # %%
+# R_mgr = pg.frameworks.resolution.resolutionMatrix(mgr.inv).diagonal()
+C_mgr = mgr.coverage()
+C_mgr_normalized = (C_mgr - min(C_mgr)) / (max(C_mgr) - min(C_mgr))
+pg.show(mgr.paraDomain,C_mgr_normalized, cMap='jet', cMin=min(C_mgr_normalized), cMax=max(C_mgr_normalized))
+# %%
 print(data)
-data['conf'] = sep
-data.remove(data['conf']>=60000)
-print(data)
-df = pd.DataFrame({'a':data['a'], 'b':data['b'], 'm':data['m'], 'n':data['n'], 'sep': data['conf']})
+data_mgr2 = data.copy()
+data_mgr2['conf'] = sep
+data_mgr2.remove(data_mgr2['conf']>=60000)
+print(data_mgr2)
+df = pd.DataFrame({'a':data_mgr2['a'], 'b':data_mgr2['b'], 'm':data_mgr2['m'], 'n':data_mgr2['n'], 'sep': data_mgr2['conf']})
 # calculate the number of sep in each range: 0~9999, 10000~19999, 20000~29999, 30000~39999, 40000~49999, 50000~59999, 60000~69999
 df['sep_range'] = pd.cut(df['sep'], bins=np.arange(0, 80000, 10000), right=False)
 df['sep_range'].value_counts()
 df['sep_range'].value_counts().plot(kind='pie', autopct='%1.1f%%')
 
 # %%
-mgr2 = ert.ERTManager(data)
-model2 = mgr2.invert(data,mesh=mesh,
+mgr2 = ert.ERTManager(data_mgr2)
+model2 = mgr2.invert(data_mgr2,mesh=mesh,
                     lam=lam  ,zWeight=1,
                     maxIter = 6,
                     verbose=True)
 # %%
 mgr2.showResultAndFit()
 mgr2.showResult(**kw)
+# %%
+C_mgr2 = mgr2.coverage()
+C_mgr2_normalized = (C_mgr2 - min(C_mgr2)) / (max(C_mgr2) - min(C_mgr2))
+pg.show(mgr2.paraDomain,C_mgr2_normalized, cMap='jet', cMin=min(C_mgr2_normalized), cMax=max(C_mgr2_normalized))
+# %%
