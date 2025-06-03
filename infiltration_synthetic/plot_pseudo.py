@@ -11,7 +11,7 @@ plt.rcParams['font.family'] = 'Microsoft YaHei'
 files = os.listdir(r'C:\Users\Git\TARI_research\infiltration_synthetic\inverison_data_case1')
 
 # %%
-for file in files[-2:]:
+for file in files[:1]:
     ERT = Project(typ='R2')  # create a Project object in a working directory
     ERT.createSurvey(os.path.join('inverison_data_case1', file), ftype='BERT')  # read the survey file
     print(f'File: {file}')

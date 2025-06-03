@@ -1,4 +1,7 @@
 # %%
+import sys
+sys.path.append(r'C:\Users\Git\masterdeg_programs\pyGIMLi\ToolBox')
+from convertURF import convertURF
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
@@ -17,12 +20,13 @@ import itertools
 
 # %%
 # load pg data
-# path = r"D:\R2MSDATA\TARI_E1_test\urf\24030215_m_E1.ohm"
-# data = pg.load(path)
-# data['k'] = ert.createGeometricFactors(data,numerical=True)
-# data['rhoa'] = data['r']*data['k']
-path = r'test1202-12.stg'
-data = ert.load(path)
+path = r"C:\Users\B30122\Downloads\22022019_m_E1\22022019_m_E1.urf"
+ohm_path = convertURF(path)
+data = pg.load(ohm_path)
+data['k'] = ert.createGeometricFactors(data,numerical=True)
+data['rhoa'] = data['r']*data['k']
+# path = r'test1202-12.stg'
+# data = ert.load(path)
 
 # %%
 electrode_x = np.arange(1,21,1)
@@ -447,13 +451,13 @@ plt.title('電極陣列類型分布', fontsize=14)
 plt.show()
 
 # %%
-tpye_num = 50000
+tpye_num = 30000
 df_selected = df[(df['sep'] > 0+tpye_num) & (df['sep'] < 10000+tpye_num)]
 # plot df_selected.iloc[0] ['a'] and ['b'] and ['m'] and ['n'] in 1D
 
 fig,ax = plt.subplots(figsize=(8,20))
 l = 0
-for ind in range(0+l,100+l):
+for ind in range(0+l,len(df_selected)+l):
     ax.text(pg.x(data)[df_selected.iloc[ind]['a']], ind, 'a', color='white', ha='center', va='center')
     ax.text(pg.x(data)[df_selected.iloc[ind]['b']], ind, 'b', color='white', ha='center', va='center')
     ax.text(pg.x(data)[df_selected.iloc[ind]['m']], ind, 'm', color='white', ha='center', va='center')

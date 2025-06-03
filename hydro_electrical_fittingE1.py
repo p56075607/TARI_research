@@ -2,6 +2,8 @@
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.use('TkAgg')  # 設置後端為 TkAgg
 from os import listdir
 from os.path import isdir, join
 from datetime import datetime
@@ -24,11 +26,11 @@ df = read_hydro_data(join(r'C:\Users\Git\TARI_research\data\external','水文站
 fig, ax = plt.subplots()
 ax.plot(df.index, df["30cm"], label="30cm")
 # set xlim from 2024/9/1 to 2024/12/31
-ax.set_xlim([datetime(2024, 9, 1, 0, 0), datetime(2024, 12, 31, 0, 0)])
+# ax.set_xlim([datetime(2024, 9, 1, 0, 0), datetime(2024, 12, 31, 0, 0)])
 # %%
 df = df.resample("h").mean()
 df['date_time'] = df.index
-df["mean_1m"] = df["30cm"]
+df["mean_1m"] = (df["30cm"] + df["50cm"] + df["60cm"] + df["80cm"] + df["100cm"])/5
 fig, ax = plt.subplots()
 ax.plot(df.index, df["mean_1m"], label="mean_1m")
 # %%
@@ -77,10 +79,11 @@ with open(join(r'C:\Users\Git\masterdeg_programs\pyGIMLi\field data\TARI_monitor
 
 # %%
 fig, ax = plt.subplots(figsize=(15,8))
-ax.plot(df.index, df["mean_1m"], label="mean_1m")
+ax.scatter(df.index, df["mean_1m"], label="mean_1m",s=3)
 ax2 = ax.twinx()
-ax2.plot(dates, all_data,color='orange')
-# # %%
+ax2.scatter(dates, np.log10(all_data),color='orange',s=3)
+plt.show()
+# %%
 # # rho_100_cm = []
 # # mesh_filter = (para_domain.cellCenters()[:,1]>-1)
 # # for i,output_folder_name in enumerate(output_folders):
@@ -102,8 +105,12 @@ for i in range(len(filterd_hydro_data)):
 rhoa = [all_data[i] for i in index]
 filterd_hydro_data['rhoa'] = rhoa
 
-# %%
-filterd_hydro_data = filterd_hydro_data[(filterd_hydro_data['date_time'] > '2024-10-01 00:00:00')]
+
+filterd_hydro_data = filterd_hydro_data[(filterd_hydro_data['date_time'] > '2024-08-17 00:00:00') & (filterd_hydro_data['date_time'] < '2024-09-20 00:00:00')]
+fig, ax = plt.subplots(figsize=(15,8))
+ax.plot(filterd_hydro_data['date_time'], filterd_hydro_data['mean_1m'], label="mean_1m")
+ax2 = ax.twinx()
+ax2.plot(filterd_hydro_data['date_time'], filterd_hydro_data['rhoa'],'--',color='orange', label="rhoa")
 # filterd_hydro_data = pd.read_csv('filterd_hydro_data_E1.csv')
 # Extracting the relevant columns
 x_data = filterd_hydro_data['mean_1m']
@@ -131,8 +138,8 @@ ss_tot = np.sum((y_data - np.mean(y_data))**2)
 r_squared = 1 - (ss_res / ss_tot)
 
 # Calculating the confidence interval (±5%)
-y_fit_upper = y_fit * 1.1
-y_fit_lower = y_fit * 0.9
+y_fit_upper = y_fit * 1.05
+y_fit_lower = y_fit * 0.95
 
 #  Plotting
 import matplotlib.pyplot as plt
@@ -140,7 +147,7 @@ plt.rcParams["font.family"] = "Times New Roman"
 fig, ax = plt.subplots(figsize=(10,8))
 ax.scatter(x_data, y_data, color='black', label='Data points',s=3)
 ax.plot(x_fit, y_fit, color='red', label=f'Fit: y = {a:.2f}ln(x) + {b:.2f}')
-ax.fill_between(x_fit, y_fit_lower, y_fit_upper, color='red', alpha=0.1, label='±10% Confidence Interval')
+ax.fill_between(x_fit, y_fit_lower, y_fit_upper, color='red', alpha=0.1, label='±5% Confidence Interval')
 ax.set_xlim(xlim)
 ylim = [20, 250]
 ax.set_ylim(ylim)

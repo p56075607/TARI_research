@@ -44,12 +44,15 @@ def load_data(conf_file, file_key):
     else:
         raise ValueError(f"未找到鍵值 '{file_key}' 對應的檔案配置。")
 
-def func(x, a, b, c):
-    # Exponential decay function: a * exp(-b * x) + c
-    return a * np.exp(-b * x) + c
+# def func(x, a, b, c):
+#     # Exponential decay function: a * exp(-b * x) + c
+#     return a * np.exp(-b * x) + c
+def func(x, a, b):
+    # Linear function: a - b * x
+    return a + b * x
 
 # 定義要處理的資料集鍵值
-file_keys = ['E1']#, 'E2', 'E3']
+file_keys = ['E1','E2','E3']
 dataset_results = {}  # 用來存放各資料集處理後的結果與擬合參數
 
 for key in file_keys:
@@ -146,7 +149,7 @@ for key in file_keys:
     
 
 # 繪圖：每個資料集的觀測資料與其擬合線都會以不同 marker 與顏色呈現
-fig, ax = plt.subplots(figsize=(15, 3))
+fig, ax = plt.subplots(figsize=(5, 4))
 markers = {'E1': 'o', 'E2': 'o', 'E3': 'o'}
 colors = {'E1': 'k', 'E2': 'green', 'E3': 'b'}
 line_styles = {'E1': '-', 'E2': '--', 'E3': ':'}
@@ -163,7 +166,9 @@ for key in dataset_results:
     # 計算擬合曲線並繪製
     t = np.linspace(0, max(data['delay_hours']), 100)
     ax.plot(t, func(t, *popt), '-', color='r',linewidth=2.5, linestyle=line_styles[key],
-            label=f'y = {popt[0]:.2f} exp(-{popt[1]:.4f}x) + {popt[2]:.2f}\n$R^2$ = {R_squared:.2f}')
+            #label=f'y = {popt[0]:.2f} exp(-{popt[1]:.4f}x) + {popt[2]:.2f}\n$R^2$ = {R_squared:.2f}'
+            label=f'y = {popt[0]:.2f} + {popt[1]:.4f}x\n$R^2$ = {R_squared:.2f}'
+            )
     
     
 
@@ -176,8 +181,8 @@ ax.grid(True)
 plt.show()
 # %%
 # sort data by delay_hours
-data = dataset_results['E1']['data']
-popt = dataset_results['E1']['fit_params']
+data = dataset_results['E2']['data']
+popt = dataset_results['E2']['fit_params']
 data = data.sort_values(by='delay_hours')
 t = np.linspace(0, max(data['delay_hours']), len(np.unique(data['delay_hours'])))
 theoretical_data = func(t, *popt)
@@ -221,8 +226,8 @@ plt.show()
 # 依序讀取 filtered_data 中的日期並組成 all_mgrs
 
 # 設定輸出路徑
-output_path = r'D:\R2MSDATA\TARI_E1_test\output_second_inversion'  # 請替換為您的實際輸出路徑
-linename = 'E1'  # 使用的線名
+output_path = r'D:\R2MSDATA_2024\TARI_E2_test\output_second_inversion'  # 請替換為您的實際輸出路徑
+linename = 'E2'  # 使用的線名
 all_mgrs = []
 date_folder_names = []
 
@@ -339,7 +344,7 @@ def plot_difference_contour(mgr1, mgr2, date_str1, date_str2, **kw_diff):
     m = plt.cm.ScalarMappable(cmap=kw_diff['cMap'])
     m.set_array(diff_grid)
     m.set_clim(kw_diff['cMin'], kw_diff['cMax'])
-    cb = plt.colorbar(m, boundaries=np.linspace(kw_diff['cMin'], kw_diff['cMax'], 64), cax=cbaxes)
+    cb = plt.colorbar(m, boundaries=np.linspace(kw_diff['cMin'], kw_diff['cMax'], 20), cax=cbaxes)
     cb.ax.set_yticks(np.linspace(kw_diff['cMin'], kw_diff['cMax'], 5))
     cb.ax.set_yticklabels(['{:.2f}'.format(x) for x in cb.ax.get_yticks()])
     cb.ax.set_ylabel(kw_diff['label'])
@@ -355,9 +360,9 @@ os.makedirs(difference_output_path, exist_ok=True)
 
 # 設定繪圖參數
 colors = [(0, 0, 1), (1, 1, 1), (1, 1, 1)]  # 從白色到藍色的顏色組合
-nodes = [0, 1-(-3/-20), 1]  
+nodes = [0, 1-(-1.5/-10), 1]  
 custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(nodes, colors)))     
-kw = dict(cMin=-20, cMax=0,logScale=False,
+kw = dict(cMin=-10, cMax=0,logScale=False,
             label='Relative resistivity \ndifference (%)',
             xlabel='Distance (m)', ylabel='Depth (m)', orientation='vertical',cMap=custom_cmap)  
 
@@ -379,7 +384,7 @@ if len(all_mgrs) > 1:
                                          reference_date, current_date, **kw)
             
             # 保存圖片
-            filename = f"{date_folder_names[i]}_vs_{date_folder_names[0]}_contour.png"
+            filename = f"{date_folder_names[i]}_vs_{date_folder_names[-1]}_contour_hr{filtered_data.iloc[i]['delay_hours']:.0f}_rho{np.log10(filtered_data.iloc[i]['median_RHOA']):.2f}.png"
             fig.savefig(join(difference_output_path, filename), dpi=300, bbox_inches='tight')
             plt.close(fig)
             every_diff_grid.append(diff_grid)
@@ -447,6 +452,42 @@ fig.savefig(join('intensity_map.png'), dpi=300, bbox_inches='tight')
 
 # %%
 # 計算並繪製各資料集的微分 (Derivative)
+fig, ax = plt.subplots(figsize=(5, 4))
+markers = {'E1': 'o', 'E2': 'o', 'E3': 'o'}  # 統一使用圓點標記
+colors = {'E1': 'k', 'E2': 'green', 'E3': 'b'}
+
+# 準備數據
+sites = []
+derivatives = []
+
+for key in ['E1', 'E2', 'E3']:
+    # 取得擬合參數
+    popt = dataset_results[key]['fit_params']
+    
+    # 線性函數 y = a + b*x 的微分是常數 b
+    derivative_value = popt[1]  # 斜率就是微分値
+    
+    sites.append(key)
+    derivatives.append(derivative_value)
+
+# 繪製圓點
+x_positions = range(len(sites))
+for i, (site, deriv, color) in enumerate(zip(sites, derivatives, colors.values())):
+    ax.plot(i, deriv, 'o', markersize=8, color=color, label=f'{site} 微分値')
+
+ax.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
+ax.set_xlabel('場址')
+ax.set_ylabel('Slope of the drying curve')
+ax.set_xticks(x_positions)
+ax.set_xticklabels(['E1 霧峰水田', 'E2 霧峰旱田', 'E3 竹塘水田'])
+ax.legend()
+ax.grid(True)
+plt.show()
+
+
+
+# %%
+# 計算並繪製各資料集的微分 (Derivative)
 fig, ax = plt.subplots(figsize=(8, 6))
 markers = {'E1': 'o', 'E2': 's', 'E3': '^'}  # Marker for each dataset
 colors = {'E1': 'k', 'E2': 'green', 'E3': 'b'}
@@ -461,6 +502,13 @@ for key in ['E1', 'E2', 'E3']:
     
     # Compute the fitted curve values
     fitted_vals = func(t, *popt)
+
+    # if key == 'E1':
+    #     theta_fitted = np.exp(((10**fitted_vals)-223.5)/-32.9)
+    # elif key == 'E2':
+    #     theta_fitted = np.exp(((10**fitted_vals)-291)/-47)
+    # elif key == 'E3':
+    #     theta_fitted = np.exp(((10**fitted_vals)-45.7)/-4.7)
     
     # Calculate derivative using np.diff (Note: diff output length is one less than t)
     dt = np.diff(t)             # Time differences
@@ -470,10 +518,12 @@ for key in ['E1', 'E2', 'E3']:
     # Plot derivative:
     # x-axis: fitted function values (excluding the last point to match slope length)
     # y-axis: calculated slope
-    ax.plot(fitted_vals[:-1], slope, '-' + markers[key], markersize=3, 
+    ax.plot(t[:-1], slope, '-' + markers[key], markersize=3, 
             color=colors[key], label=f'{key} 微分')
+    # ax.plot(t, theta_fitted, '-' + markers[key], markersize=3, 
+    #         color=colors[key], label=r'{:s} $\theta$'.format(key))
 ax.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
-ax.set_xlabel('Log Apparent Resistivity log(ohm-m)')
+ax.set_xlabel('Drying Time (hours)')
 ax.set_ylabel('Slope of the drying curve')
 ax.legend()
 ax.grid(True)
@@ -509,30 +559,26 @@ plt.show()
 
 
 
-
-
-
-
 # ---------------------------------------------------------------------------------------------------------------
 
 # %%
 
-df_window, df_RHOA = load_data('Refit_config.yaml', 'E2')
+df_window, df_RHOA = load_data('Refit_config.yaml', 'E1')
 df_RHOA = df_RHOA[df_RHOA['median_RHOA'] > 10**0.5]
 df_RHOA['date'] = pd.to_datetime(df_RHOA['date'])
 # filter some dates
-# df_RHOA = df_RHOA[df_RHOA['date'] > '2024/03/01 00:00:00']
-# df_RHOA = df_RHOA[(df_RHOA['date'] < '2024/07/05 16:00') | (df_RHOA['date'] > '2024/07/08 11:00')]
-# df_RHOA = df_RHOA[df_RHOA['date'] < '2024/11/21 16:00:00']
+df_RHOA = df_RHOA[df_RHOA['date'] > '2024/03/01 00:00:00']
+df_RHOA = df_RHOA[(df_RHOA['date'] < '2024/07/05 16:00') | (df_RHOA['date'] > '2024/07/08 11:00')]
+df_RHOA = df_RHOA[df_RHOA['date'] < '2024/11/21 16:00:00']
 
-df_RHOA = df_RHOA[df_RHOA['date'] < '2024/11/28 00:00:00']
+# df_RHOA = df_RHOA[df_RHOA['date'] < '2024/11/28 00:00:00']
 
 # df_RHOA = df_RHOA[df_RHOA['date'] > '2024/03/10 00:00:00']
 
 plt.rcParams['font.family'] = 'Microsoft YaHei'
 # plot the picking slope histogram
 fig, ax = plt.subplots(figsize=(15, 5))
-ax.plot(df_RHOA['date'], np.log10(df_RHOA['median_RHOA']), 'ro',markersize=3 ,zorder=2)
+ax.plot(df_RHOA['date'], np.log10(df_RHOA['median_RHOA']), 'ko',markersize=3 ,zorder=2)
 fontsize = 20
 ax.set_ylabel('視電阻率'+'\n'+r'$log(\rho_a)$', fontsize=fontsize+5,fontweight='bold')
 fz_minor = 25
@@ -542,15 +588,44 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter('%m'))
 ax.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
 ax.yaxis.get_offset_text().set_fontsize(fz_minor)
 
-
-ax.grid(True, which='major', linestyle='--', linewidth=0.5)
-
-
 ax.grid(True, which='major', linestyle='--', linewidth=0.5)
 # set xy ticks label fontsize 
 ax.tick_params(axis='both', which='major', length=10,width=3, direction='in')
 ax.tick_params(axis='both', which='minor', length=5,width=1.5, direction='in')
 ax.set_xlabel('Time (2024/mm)', fontsize=fz_minor, fontweight='bold')
+width = 3
+ax.spines['top'].set_linewidth(width)
+ax.spines['right'].set_linewidth(width)
+ax.spines['bottom'].set_linewidth(width)
+ax.spines['left'].set_linewidth(width)
+ax.grid(True, which='minor', linestyle='--', linewidth=0.5)
+ax.grid(True, which='major', linestyle='-', linewidth=1)
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+
+
+
+
+
+# %%
+# plot the picking slope histogram
+fig, ax = plt.subplots(figsize=(15, 5))
+ax.plot(df_RHOA['date'], np.log10(df_RHOA['median_RHOA']), 'ko',markersize=10 ,zorder=2)
+fontsize = 20
+ax.set_ylabel('視電阻率'+'\n'+r'$log(\rho_a)$', fontsize=fontsize+5,fontweight='bold')
+fz_minor = 25
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+plt.xticks(fontsize=fz_minor,rotation=45, ha='right', rotation_mode='anchor',fontweight='bold')
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
+ax.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
+ax.yaxis.get_offset_text().set_fontsize(fz_minor)
+ax.set_xlim([pd.to_datetime('2024/10/08 00:00:00'), pd.to_datetime('2024/10/14 14:00:00')])
+ax.set_ylim([2.075, 2.16])
+
+ax.grid(True, which='major', linestyle='--', linewidth=0.5,alpha=0.5)
+# set xy ticks label fontsize 
+ax.tick_params(axis='both', which='major', length=10,width=3, direction='in')
+ax.tick_params(axis='both', which='minor', length=5,width=1.5, direction='in')
+ax.set_xlabel('Time (2024/mm/dd)', fontsize=fz_minor, fontweight='bold')
 width = 3
 ax.spines['top'].set_linewidth(width)
 ax.spines['right'].set_linewidth(width)

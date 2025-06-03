@@ -90,15 +90,14 @@ filterd_hydro_data = filterd_hydro_data[(filterd_hydro_data['date_time'] > '2024
 filterd_hydro_data = filterd_hydro_data[(filterd_hydro_data['date_time'] < '2024-07-05 00:00:00')]
 x_data = filterd_hydro_data['mean_1m']
 y_data = filterd_hydro_data['rhoa']
-fig, ax = plt.subplots(figsize=(10,8))
-ax.scatter(x_data, y_data, c=np.linspace(1,len(filterd_hydro_data),len(filterd_hydro_data)), label='Data points',s=3)
-# %%
+
+
 fig, ax = plt.subplots(figsize=(21,8))
 ax.scatter(filterd_hydro_data['date_time'], filterd_hydro_data['mean_1m'],s=2, label="mean_1m")
 ax2 = ax.twinx()
-ax2.scatter(filterd_hydro_data['date_time'], -filterd_hydro_data['rhoa'],c='r',s=2, label="RHOA")  
+ax2.scatter(filterd_hydro_data['date_time'], filterd_hydro_data['rhoa'],c='r',s=2, label="RHOA")  
 ax.grid(True, which='major', linestyle='--', linewidth=0.5)
-# %%
+
 # Extracting the relevant columns
 
 
@@ -129,7 +128,8 @@ y_fit_lower = y_fit * 0.95
 import matplotlib.pyplot as plt
 plt.rcParams["font.family"] = "Times New Roman"
 fig, ax = plt.subplots(figsize=(10,8))
-ax.scatter(x_data, y_data, color='black', label='Data points',s=3)
+ax.scatter(x_data, y_data, c='black'#np.linspace(1,len(filterd_hydro_data),len(filterd_hydro_data))#
+           , label='Data points',s=3)
 ax.plot(x_fit, y_fit, color='red', label=f'Fit: y = {a:.2f}ln(x) + {b:.2f}')
 ax.fill_between(x_fit, y_fit_lower, y_fit_upper, color='red', alpha=0.1, label='±5% Confidence Interval')
 # ax.set_xlim(xlim)
@@ -138,7 +138,7 @@ ax.fill_between(x_fit, y_fit_lower, y_fit_upper, color='red', alpha=0.1, label='
 
 fontsize=18
 # # Adding equation and R-squared to the plot
-# plt.text(xlim[0],ylim[0] ,f'    $y = {a:.2f} \ln(x) + {b:.2f}$\n    $R^2 = {r_squared:.2f}$\n', fontsize=fontsize)
+plt.text(xlim[0],27 ,f'    $y = {a:.2f} \ln(x) + {b:.2f}$\n    $R^2 = {r_squared:.2f}$\n', fontsize=fontsize)
 
 # Labels and legend
 plt.xlabel('Water content (%)',fontsize=fontsize,fontweight='bold')
