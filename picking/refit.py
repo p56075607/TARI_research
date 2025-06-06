@@ -149,7 +149,7 @@ for key in file_keys:
     
 
 # 繪圖：每個資料集的觀測資料與其擬合線都會以不同 marker 與顏色呈現
-fig, ax = plt.subplots(figsize=(5, 4))
+fig, ax = plt.subplots(figsize=(7,5))
 markers = {'E1': 'o', 'E2': 'o', 'E3': 'o'}
 colors = {'E1': 'k', 'E2': 'green', 'E3': 'b'}
 line_styles = {'E1': '-', 'E2': '--', 'E3': ':'}
@@ -173,12 +173,45 @@ for key in dataset_results:
     
 
 
-ax.set_xlabel('Drying Time (hours)')
-ax.set_ylabel('Log10(Aparrent Resistivity)')
+
+fz_minor = 15
+ax.set_xlabel('Drying Time (hours)',fontsize=fz_minor,fontweight='bold')
+ax.set_ylabel('Log10(Aparrent Resistivity)',fontsize=fz_minor,fontweight='bold')
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+plt.xticks(fontsize=fz_minor,fontweight='bold')
+ax.tick_params(axis='both', which='major', length=5,width=1.5, direction='in')
+
+
+width = 3
+ax.spines['top'].set_linewidth(width)
+ax.spines['right'].set_linewidth(width)
+ax.spines['bottom'].set_linewidth(width)
+ax.spines['left'].set_linewidth(width)
+ax.grid(True, which='minor', linestyle='--', linewidth=0.5)
+ax.grid(True, which='major', linestyle='-', linewidth=1)
+plt.yticks(fontsize=fz_minor,fontweight='bold')
 # ax.set_title('E1、E2、E3 各自的擬合結果')
-ax.legend()
+
+# 添加圖例並設定文字為粗體和對應顏色
+legend = ax.legend()
+# 確保圖例文本為粗體並設定顏色
+for i, text in enumerate(legend.get_texts()):
+    text.set_weight('bold')
+    text.set_fontsize(fz_minor)
+    # 每個資料集有兩個圖例項目（觀測資料和擬合線）
+    # 獲取對應的資料集並設定顏色
+    dataset_keys = list(dataset_results.keys())
+    dataset_index = i // 2  # 每兩個圖例項目對應一個資料集
+    if dataset_index < len(dataset_keys):
+        key = dataset_keys[dataset_index]
+        if i % 2 == 0:  # 觀測資料（散點）
+            text.set_color(colors[key])
+        else:  # 擬合線
+            text.set_color(colors[key])  # 擬合線都是紅色
+
 ax.grid(True)
 plt.show()
+fig.savefig('fitting.png',dpi=300,bbox_inches='tight')
 # %%
 # sort data by delay_hours
 data = dataset_results['E2']['data']
@@ -452,13 +485,13 @@ fig.savefig(join('intensity_map.png'), dpi=300, bbox_inches='tight')
 
 # %%
 # 計算並繪製各資料集的微分 (Derivative)
-fig, ax = plt.subplots(figsize=(5, 4))
-markers = {'E1': 'o', 'E2': 'o', 'E3': 'o'}  # 統一使用圓點標記
+fig, ax = plt.subplots(figsize=(4, 6))
 colors = {'E1': 'k', 'E2': 'green', 'E3': 'b'}
 
 # 準備數據
 sites = []
 derivatives = []
+bar_colors = []
 
 for key in ['E1', 'E2', 'E3']:
     # 取得擬合參數
@@ -469,21 +502,36 @@ for key in ['E1', 'E2', 'E3']:
     
     sites.append(key)
     derivatives.append(derivative_value)
+    bar_colors.append(colors[key])
 
-# 繪製圓點
+# 繪製條狀圖
 x_positions = range(len(sites))
-for i, (site, deriv, color) in enumerate(zip(sites, derivatives, colors.values())):
-    ax.plot(i, deriv, 'o', markersize=8, color=color, label=f'{site} 微分値')
+bars = ax.bar(x_positions, derivatives, color=bar_colors, edgecolor='black', linewidth=1.5)
+
+# 為每個條狀圖添加數值標籤
+for i, (bar, deriv) in enumerate(zip(bars, derivatives)):
+    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + abs(bar.get_height())*0.01, 
+            f'{deriv:.2e}', ha='center', va='bottom', fontweight='bold', fontsize=10)
 
 ax.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
-ax.set_xlabel('場址')
-ax.set_ylabel('Slope of the drying curve')
+# ax.set_xlabel('場址',fontsize=fz_minor,fontweight='bold')
+ax.set_ylabel('Slope of the drying curve',fontsize=fz_minor,fontweight='bold')
 ax.set_xticks(x_positions)
-ax.set_xticklabels(['E1 霧峰水田', 'E2 霧峰旱田', 'E3 竹塘水田'])
-ax.legend()
-ax.grid(True)
-plt.show()
+ax.set_xticklabels(['霧峰水田', '霧峰旱田', '竹塘水田'])
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+plt.xticks(fontsize=fz_minor,fontweight='bold')
+ax.set_ylim(1.5e-4,3.8e-4)
+ax.tick_params(axis='both', which='major', length=5,width=1.5, direction='in')
 
+width = 3
+ax.spines['top'].set_linewidth(width)
+ax.spines['right'].set_linewidth(width)
+ax.spines['bottom'].set_linewidth(width)
+ax.spines['left'].set_linewidth(width)
+
+plt.yticks(fontsize=fz_minor,fontweight='bold')
+plt.show()
+fig.savefig('diff_bar.png',dpi=300,bbox_inches='tight')
 
 
 # %%
@@ -563,74 +611,190 @@ plt.show()
 
 # %%
 
-df_window, df_RHOA = load_data('Refit_config.yaml', 'E1')
-df_RHOA = df_RHOA[df_RHOA['median_RHOA'] > 10**0.5]
-df_RHOA['date'] = pd.to_datetime(df_RHOA['date'])
-# filter some dates
-df_RHOA = df_RHOA[df_RHOA['date'] > '2024/03/01 00:00:00']
-df_RHOA = df_RHOA[(df_RHOA['date'] < '2024/07/05 16:00') | (df_RHOA['date'] > '2024/07/08 11:00')]
-df_RHOA = df_RHOA[df_RHOA['date'] < '2024/11/21 16:00:00']
+# 使用與前面相同的顏色定義
+colors = {'E1': 'k', 'E2': 'green', 'E3': 'b'}
+file_keys = ['E1', 'E2', 'E3']
+all_datasets = {}
 
-# df_RHOA = df_RHOA[df_RHOA['date'] < '2024/11/28 00:00:00']
-
-# df_RHOA = df_RHOA[df_RHOA['date'] > '2024/03/10 00:00:00']
+# 載入並篩選各個資料集
+for key in file_keys:
+    try:
+        df_window, df_RHOA = load_data('Refit_config.yaml', key)
+        
+        # 基本篩選：移除負值或過小的電阻率
+        if key == 'E1':
+            df_RHOA = df_RHOA[df_RHOA['median_RHOA'] > 10**0.5]
+        else:
+            df_RHOA = df_RHOA[df_RHOA['median_RHOA'] > 0]
+        
+        # 轉換日期格式
+        df_RHOA['date'] = pd.to_datetime(df_RHOA['date'])
+        
+        # 根據不同資料集進行特定的日期篩選
+        if key == 'E1':
+            df_RHOA = df_RHOA[df_RHOA['date'] > '2024/03/01 00:00:00']
+            df_RHOA = df_RHOA[(df_RHOA['date'] < '2024/07/05 16:00') | (df_RHOA['date'] > '2024/07/08 11:00')]
+            df_RHOA = df_RHOA[df_RHOA['date'] < '2024/11/21 16:00:00']
+        elif key == 'E2':
+            df_RHOA = df_RHOA[df_RHOA['date'] < '2024/11/28 00:00:00']
+        elif key == 'E3':
+            df_RHOA = df_RHOA[df_RHOA['date'] > '2024/03/10 00:00:00']
+        
+        all_datasets[key] = df_RHOA
+        print(f"成功載入 {key} 的資料，共 {len(df_RHOA)} 筆")
+        
+    except (FileNotFoundError, ValueError) as e:
+        print(f"載入 {key} 時發生錯誤: {e}")
+        continue
 
 plt.rcParams['font.family'] = 'Microsoft YaHei'
-# plot the picking slope histogram
-fig, ax = plt.subplots(figsize=(15, 5))
-ax.plot(df_RHOA['date'], np.log10(df_RHOA['median_RHOA']), 'ko',markersize=3 ,zorder=2)
-fontsize = 20
-ax.set_ylabel('視電阻率'+'\n'+r'$log(\rho_a)$', fontsize=fontsize+5,fontweight='bold')
-fz_minor = 25
-plt.yticks(fontsize=fz_minor,fontweight='bold')
-plt.xticks(fontsize=fz_minor,rotation=45, ha='right', rotation_mode='anchor',fontweight='bold')
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%m'))
-ax.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
-ax.yaxis.get_offset_text().set_fontsize(fz_minor)
 
-ax.grid(True, which='major', linestyle='--', linewidth=0.5)
-# set xy ticks label fontsize 
-ax.tick_params(axis='both', which='major', length=10,width=3, direction='in')
-ax.tick_params(axis='both', which='minor', length=5,width=1.5, direction='in')
-ax.set_xlabel('Time (2024/mm)', fontsize=fz_minor, fontweight='bold')
+# 繪製所有資料集在同一張圖中
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 7), sharex=True, 
+                               gridspec_kw={'height_ratios': [2, 1]})
+
+for key in all_datasets.keys():
+    df_RHOA = all_datasets[key]
+    # 設定對應的中文標籤名稱
+    if key == 'E1':
+        label_name = 'E1 霧峰水田'
+    elif key == 'E2':
+        label_name = 'E2 霧峰旱田'
+    elif key == 'E3':
+        label_name = 'E3 竹塘水田'
+    else:
+        label_name = key
+    
+    # 在兩個子圖中都繪製相同的資料
+    ax1.plot(df_RHOA['date'], np.log10(df_RHOA['median_RHOA']), 
+            'o', color=colors[key], markersize=3, label=label_name, zorder=2)
+    ax2.plot(df_RHOA['date'], np.log10(df_RHOA['median_RHOA']), 
+            'o', color=colors[key], markersize=3, zorder=2)
+
+# 設定y軸範圍
+ax1.set_ylim(1.95, 2.55)  # 上方子圖
+ax2.set_ylim(1.38, 1.53)  # 下方子圖
+
+# 隱藏上方子圖的x軸
+ax1.spines['bottom'].set_visible(False)
+ax1.xaxis.tick_top()
+ax1.tick_params(labeltop=False)  # 不顯示上方的x軸標籤
+
+# 隱藏下方子圖的上方軸線
+ax2.spines['top'].set_visible(False)
+ax2.xaxis.tick_bottom()
+
+# 添加斷軸標記
+d = .01  # 斷軸標記的大小
+kwargs = dict(transform=ax1.transAxes, color='k', clip_on=False)
+ax1.plot((-d, +d), (-d, +d), **kwargs)        # 左下斜線
+ax1.plot((1 - d, 1 + d), (-d, +d), **kwargs)  # 右下斜線
+
+kwargs.update(transform=ax2.transAxes)  # 切換到下方子圖
+ax2.plot((-d, +d), (1 - d, 1 + d), **kwargs)  # 左上斜線
+ax2.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)  # 右上斜線
+
+# 設定字體和標籤
+fontsize = 20
+fz_minor = 25
+
+# 為上方子圖設定y軸標籤
+# ax1.set_ylabel('Median Log'+'\n'+'Apparent Resistivity'+'\n'+'(ohm-m)', fontsize=fontsize+5, fontweight='bold')
+ax1.tick_params(axis='y', labelsize=fz_minor)
+ax1.tick_params(axis='both', which='major', length=10, width=3, direction='in')
+ax1.tick_params(axis='both', which='minor', length=5, width=1.5, direction='in')
+fig.text(
+    -0.02, 0.55,
+    'Median Log\nApparent Resistivity(ohm-m)',
+    va='center', ha='center', rotation='vertical',
+    fontsize=fontsize+5, fontweight='bold'
+)
+
+# 為下方子圖設定標籤
+ax2.tick_params(axis='both', labelsize=fz_minor)
+# ax2.tick_params(axis='x', rotation=45)
+ax2.xaxis.set_major_formatter(mdates.DateFormatter('%m'))
+ax2.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
+ax2.yaxis.get_offset_text().set_fontsize(fz_minor)
+ax2.tick_params(axis='both', which='major', length=10, width=3, direction='in')
+ax2.tick_params(axis='both', which='minor', length=5, width=1.5, direction='in')
+ax2.set_xlabel('Time (2024/mm)', fontsize=fz_minor, fontweight='bold')
+
+# 設定刻度標籤為粗體
+for label in ax1.get_yticklabels():
+    label.set_weight('bold')
+for label in ax2.get_yticklabels():
+    label.set_weight('bold')
+for label in ax2.get_xticklabels():
+    label.set_weight('bold')
+
+# 設定邊框粗細
 width = 3
-ax.spines['top'].set_linewidth(width)
-ax.spines['right'].set_linewidth(width)
-ax.spines['bottom'].set_linewidth(width)
-ax.spines['left'].set_linewidth(width)
-ax.grid(True, which='minor', linestyle='--', linewidth=0.5)
-ax.grid(True, which='major', linestyle='-', linewidth=1)
-plt.yticks(fontsize=fz_minor,fontweight='bold')
+for ax in [ax1, ax2]:
+    ax.spines['top'].set_linewidth(width)
+    ax.spines['right'].set_linewidth(width)
+    ax.spines['bottom'].set_linewidth(width)
+    ax.spines['left'].set_linewidth(width)
+    ax.grid(True, which='minor', linestyle='--', linewidth=0.5)
+    ax.grid(True, which='major', linestyle='-', linewidth=1)
 
+# 添加圖例到上方子圖
+legend = ax1.legend(fontsize=fz_minor-5)
+# 確保圖例文本為粗體並設定顏色
+for i, text in enumerate(legend.get_texts()):
+    text.set_weight('bold')
+    # 獲取對應的資料集鍵值並設定顏色
+    dataset_keys = list(all_datasets.keys())
+    if i < len(dataset_keys):
+        key = dataset_keys[i]
+        text.set_color(colors[key])
 
-
-
-
+plt.tight_layout()
+plt.show()
+fig.savefig('time_series.png',dpi=300,bbox_inches='tight')
 # %%
-# plot the picking slope histogram
+# 繪製放大版本的圖（針對特定時間區間）
 fig, ax = plt.subplots(figsize=(15, 5))
-ax.plot(df_RHOA['date'], np.log10(df_RHOA['median_RHOA']), 'ko',markersize=10 ,zorder=2)
+
+for key in all_datasets.keys():
+    df_RHOA = all_datasets[key]
+    # 篩選特定時間範圍的資料
+    mask = (df_RHOA['date'] >= pd.to_datetime('2024/10/08 00:00:00')) & \
+           (df_RHOA['date'] <= pd.to_datetime('2024/10/14 14:00:00'))
+    df_filtered = df_RHOA.loc[mask]
+    
+    if not df_filtered.empty:
+        ax.plot(df_filtered['date'], np.log10(df_filtered['median_RHOA']), 
+                'o', color=colors[key], markersize=10, label=f'{key}', zorder=2)
+
 fontsize = 20
-ax.set_ylabel('視電阻率'+'\n'+r'$log(\rho_a)$', fontsize=fontsize+5,fontweight='bold')
+ax.set_ylabel('視電阻率'+'\n'+r'$log(\rho_a)$', fontsize=fontsize+5, fontweight='bold')
 fz_minor = 25
-plt.yticks(fontsize=fz_minor,fontweight='bold')
-plt.xticks(fontsize=fz_minor,rotation=45, ha='right', rotation_mode='anchor',fontweight='bold')
+plt.yticks(fontsize=fz_minor, fontweight='bold')
+plt.xticks(fontsize=fz_minor, rotation=45, ha='right', rotation_mode='anchor', fontweight='bold')
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
 ax.ticklabel_format(style='sci', scilimits=(-1, 2), axis='y')
 ax.yaxis.get_offset_text().set_fontsize(fz_minor)
 ax.set_xlim([pd.to_datetime('2024/10/08 00:00:00'), pd.to_datetime('2024/10/14 14:00:00')])
-ax.set_ylim([2.075, 2.16])
 
-ax.grid(True, which='major', linestyle='--', linewidth=0.5,alpha=0.5)
-# set xy ticks label fontsize 
-ax.tick_params(axis='both', which='major', length=10,width=3, direction='in')
-ax.tick_params(axis='both', which='minor', length=5,width=1.5, direction='in')
+ax.grid(True, which='major', linestyle='--', linewidth=0.5, alpha=0.5)
+# 設定xy軸刻度標籤字體大小
+ax.tick_params(axis='both', which='major', length=10, width=3, direction='in')
+ax.tick_params(axis='both', which='minor', length=5, width=1.5, direction='in')
 ax.set_xlabel('Time (2024/mm/dd)', fontsize=fz_minor, fontweight='bold')
+
+# 設定邊框粗細
 width = 3
 ax.spines['top'].set_linewidth(width)
 ax.spines['right'].set_linewidth(width)
 ax.spines['bottom'].set_linewidth(width)
 ax.spines['left'].set_linewidth(width)
+
 ax.grid(True, which='minor', linestyle='--', linewidth=0.5)
 ax.grid(True, which='major', linestyle='-', linewidth=1)
-plt.yticks(fontsize=fz_minor,fontweight='bold')
+
+# 添加圖例
+ax.legend(fontsize=fz_minor-5, fontweight='bold')
+
+plt.tight_layout()
+plt.show()

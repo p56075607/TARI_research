@@ -1,7 +1,7 @@
 # %%
 import sys
 sys.path.append(r'C:\Users\Git\masterdeg_programs\pyGIMLi\ToolBox')
-from convertURF import convertURF
+from inverison_util import convertURF
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
