@@ -22,20 +22,32 @@ def correct_timestamp(ts):
 
 def read_hydro_data(data_path):
     df = pd.read_csv(data_path)
+    
+    # 替換所有的 "NAN" 字符串為實際的 NaN 值
+    df = df.replace("NAN", np.nan)
+    
     # Pre-process and correct the TIMESTAMP column
     df['TIMESTAMP'] = df['TIMESTAMP'].apply(correct_timestamp)
 
     # Set the TIMESTAMP column as the DataFrame index
     df.set_index('TIMESTAMP', inplace=True)
+    
+    # 確保數值列是正確的數值類型
+    numeric_columns = df.columns.difference(['RECORD'])  # 除了 RECORD 之外的所有列
+    for col in numeric_columns:
+        if col != 'TIMESTAMP':  # 跳過時間戳列
+            df[col] = pd.to_numeric(df[col], errors='coerce')
 
     # Resample the data to hourly averages
-    hourly_avg = df.resample('H').mean()
+    hourly_avg = df.resample('h').mean()
     if 'Rain_mm_Tot' in hourly_avg.columns:
         # Summing the rain data to the daily rainfall
         daily_rainfall = hourly_avg['Rain_mm_Tot'].resample('D').sum()
     # Delete the RECORD, BattV column
-    hourly_avg.drop('RECORD', axis=1, inplace=True)
-    hourly_avg.drop('BattV', axis=1, inplace=True)
+    if 'RECORD' in hourly_avg.columns:
+        hourly_avg.drop('RECORD', axis=1, inplace=True)
+    if 'BattV' in hourly_avg.columns:
+        hourly_avg.drop('BattV', axis=1, inplace=True)
 
     if 'Rain_mm_Tot' in hourly_avg.columns:
         return hourly_avg, daily_rainfall
@@ -121,22 +133,45 @@ def plot_hydro_data(hourly_avg, daily_rainfall, plot_target,dates):
 #        'Result_800cm_Avg', 'Result_900cm_Avg']
 # fig = plot_hydro_data(hourly_avg, daily_rainfall, plot_target,dates)
 
-# %%
-data_path = join("data","external","農試所旱田_1130514.dat")
-hourly_avg, daily_rainfall = read_hydro_data(data_path)
-dates = check_files_in_directory(r'C:\Users\R2MSDATA\TARI_E2\urf')
-plot_target = ['Result_10cm_Avg', 'Result_20cm_Avg', 'Result_30cm_Avg',
-    'Result_40cm_Avg', 'Result_50cm_Avg', 'Result_60cm_Avg',
-    'Result_80cm_Avg', 'Result_100cm_Avg',
-    'Result_150cm_Avg',
-       'Result_200cm_Avg', 'Result_300cm_Avg', 'Result_400cm_Avg',
-       'Result_500cm_Avg', 'Result_600cm_Avg', 'Result_700cm_Avg',
-       'Result_800cm_Avg', 'Result_900cm_Avg']
-fig = plot_hydro_data(hourly_avg, daily_rainfall, plot_target,dates)
-# %%
-# plot_target = ['Result_150cm_Avg',
+# # %%
+# data_path = join("data","external","農試所旱田_1130514.dat")
+# hourly_avg, daily_rainfall = read_hydro_data(data_path)
+# dates = check_files_in_directory(r'C:\Users\R2MSDATA\TARI_E2\urf')
+# plot_target = ['Result_10cm_Avg', 'Result_20cm_Avg', 'Result_30cm_Avg',
+#     'Result_40cm_Avg', 'Result_50cm_Avg', 'Result_60cm_Avg',
+#     'Result_80cm_Avg', 'Result_100cm_Avg',
+#     'Result_150cm_Avg',
 #        'Result_200cm_Avg', 'Result_300cm_Avg', 'Result_400cm_Avg',
 #        'Result_500cm_Avg', 'Result_600cm_Avg', 'Result_700cm_Avg',
 #        'Result_800cm_Avg', 'Result_900cm_Avg']
-# fig = plot_hydro_data(hourly_avg, daily_rainfall, plot_target)
-# fig.savefig(join("output","hydro_data_150.png"),dpi=300, bbox_inches='tight')
+# fig = plot_hydro_data(hourly_avg, daily_rainfall, plot_target,dates)
+# %%
+data_path = join("data","external","柳營農田_1140610.dat")
+hourly_avg, daily_rainfall = read_hydro_data(data_path)
+plot_target = ["Result_20cm_Avg","Result_30cm_Avg","Result_50cm_Avg","Result_70cm_Avg","Result_100cm_Avg","Result_120cm_Avg","Result_140cm_Avg"]
+fig, ax1 = plt.subplots(figsize=(20, 8))
+for column in hourly_avg.columns:
+    if column in plot_target:
+        print(column)
+        # ax1.scatter(hourly_avg.index, hourly_avg[column], s=1, marker='o', label=column)
+        ax1.plot(hourly_avg.index, hourly_avg[column],linewidth=1, label=column)
+        ax1.set_title('Hourly Averages of Hydrological Data and Rainfall')
+        ax1.set_xlabel('Time (YYYY-MM-DD)')
+        ax1.set_ylabel('Soil Moisture (%)')
+        ax1.set_ylim(0, 50)        
+ax1.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+ax1.grid(linestyle='--',linewidth=0.5)
+
+# Rotate dates for better readability
+plt.xticks(rotation=45)
+plt.tight_layout()  # Adjust layout to make room for the rotated date labels
+
+if 'Rain_mm_Tot' in hourly_avg.columns:
+    ax2 = ax1.twinx()  # Create a second Y-axis sharing the same X-axis
+    ax2.bar(daily_rainfall.index, daily_rainfall, width=1, alpha=0.3, color='c', label='Rainfall')
+    ax2.set_ylabel('Rainfall (mm)', color='c')  # Set label for the secondary Y-axis
+    ax2.tick_params(axis='y', labelcolor='c')  # Set ticks color for the secondary Y-axis
+
+fig.legend(loc="upper left"#, bbox_to_anchor=(0.9,0.9)
+           )

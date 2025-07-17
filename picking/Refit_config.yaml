@@ -1,6 +1,6 @@
 E1:
-  window: "RHOA_data/農試所水田/E1_window.csv"
-  rhoa: "RHOA_data/農試所水田/E1_rhoa.csv"
+  window: "C:/Users/Git/TARI_research/picking/RHOA_data/農試所水田/E1_window.csv"
+  rhoa: "C:/Users/Git/TARI_research/picking/RHOA_data/農試所水田/alpha_one_rhoa_data.csv"
 E2:
   window: "RHOA_data/農試所旱田/E2_window.csv"
   rhoa: "RHOA_data/農試所旱田/E2_rhoa.csv"

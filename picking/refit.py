@@ -52,7 +52,7 @@ def func(x, a, b):
     return a + b * x
 
 # 定義要處理的資料集鍵值
-file_keys = ['E1','E2','E3']
+file_keys = ['E1']
 dataset_results = {}  # 用來存放各資料集處理後的結果與擬合參數
 
 for key in file_keys:
@@ -104,7 +104,9 @@ for key in file_keys:
         df_filtered['start_rhoa'] = df_filtered['median_RHOA'].iloc[0]
         df_filtered['window_id'] = i // 2
         
-        results.append(df_filtered[['window_id', 'delay_hours', 'median_RHOA', 'Q1_RHOA', 'Q3_RHOA', 'start_rhoa','date']])
+        results.append(df_filtered[['window_id', 'delay_hours', 'median_RHOA', 
+                                    #'alpha_one_RHOA', #'Q1_RHOA', 'Q3_RHOA', 
+                                    'start_rhoa','date']])
     
     if len(results) == 0:
         continue
@@ -146,8 +148,9 @@ for key in file_keys:
     if key == 'E1':
         # delete dataset_results[key][data][median_log_RHOA] > 2.15
         dataset_results[key]['data'] = dataset_results[key]['data'][dataset_results[key]['data']['median_log_RHOA'] < 2.15]
-    
-
+        
+data = dataset_results[key]['data']
+data.to_csv('dryingtime_E1.csv',columns=['delay_hours','median_RHOA'],index=False)
 # 繪圖：每個資料集的觀測資料與其擬合線都會以不同 marker 與顏色呈現
 fig, ax = plt.subplots(figsize=(7,5))
 markers = {'E1': 'o', 'E2': 'o', 'E3': 'o'}
@@ -157,8 +160,18 @@ for key in dataset_results:
     data = dataset_results[key]['data']
     popt = dataset_results[key]['fit_params']
     
+    # 設定中文標籤名稱
+    if key == 'E1':
+        site_name = 'E1 霧峰水田'
+    elif key == 'E2':
+        site_name = 'E2 霧峰旱田'
+    elif key == 'E3':
+        site_name = 'E3 竹塘水田'
+    else:
+        site_name = key
+    
     # 繪製觀測資料散點圖
-    ax.plot(data['delay_hours'], data['median_log_RHOA'], markers[key], markersize=3, color=colors[key], label=f'{key} 觀測資料')
+    ax.plot(data['delay_hours'], data['median_log_RHOA'], markers[key], markersize=3, color=colors[key], label=f'{site_name}')
     
     # 計算 R^2 擬合度
     R_squared = 1 - (np.sum((data['median_log_RHOA'] - func(data['delay_hours'], *popt))**2) / np.sum((data['median_log_RHOA'] - np.mean(data['median_log_RHOA']))**2))
@@ -640,7 +653,7 @@ for key in file_keys:
         elif key == 'E3':
             df_RHOA = df_RHOA[df_RHOA['date'] > '2024/03/10 00:00:00']
         
-        all_datasets[key] = df_RHOA
+        all_datasets[key] = {'rhoa': df_RHOA, 'window': df_window}
         print(f"成功載入 {key} 的資料，共 {len(df_RHOA)} 筆")
         
     except (FileNotFoundError, ValueError) as e:
@@ -654,7 +667,12 @@ fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 7), sharex=True,
                                gridspec_kw={'height_ratios': [2, 1]})
 
 for key in all_datasets.keys():
-    df_RHOA = all_datasets[key]
+    df_RHOA = all_datasets[key]['rhoa']
+    df_window = all_datasets[key]['window']
+    
+    # 轉換時間格式
+    df_window['x'] = pd.to_datetime(df_window['x'])
+    
     # 設定對應的中文標籤名稱
     if key == 'E1':
         label_name = 'E1 霧峰水田'
@@ -665,11 +683,27 @@ for key in all_datasets.keys():
     else:
         label_name = key
     
-    # 在兩個子圖中都繪製相同的資料
+    # 在兩個子圖中都繪製相同的資料（原始數據）
     ax1.plot(df_RHOA['date'], np.log10(df_RHOA['median_RHOA']), 
             'o', color=colors[key], markersize=3, label=label_name, zorder=2)
     ax2.plot(df_RHOA['date'], np.log10(df_RHOA['median_RHOA']), 
             'o', color=colors[key], markersize=3, zorder=2)
+    
+    # 處理時間窗並用紅線繪製選取擬合之的數據
+    for i in range(0, len(df_window) - 1, 2):
+        start_time = df_window.loc[i, 'x']
+        end_time = df_window.loc[i + 1, 'x']
+        
+        # 篩選出在此時間窗口內的資料
+        mask = (df_RHOA['date'] >= start_time) & (df_RHOA['date'] <= end_time)
+        df_filtered = df_RHOA.loc[mask].copy()
+        
+        if not df_filtered.empty:
+            # 用紅線繪製選取擬合之的數據
+            ax1.plot(df_filtered['date'], np.log10(df_filtered['median_RHOA']), 
+                    'o', color='red', markersize=1, alpha=1, zorder=3)
+            ax2.plot(df_filtered['date'], np.log10(df_filtered['median_RHOA']), 
+                    'o', color='red', markersize=1, alpha=1, zorder=3)
 
 # 設定y軸範圍
 ax1.set_ylim(1.95, 2.55)  # 上方子圖
@@ -739,15 +773,42 @@ for ax in [ax1, ax2]:
     ax.grid(True, which='major', linestyle='-', linewidth=1)
 
 # 添加圖例到上方子圖
-legend = ax1.legend(fontsize=fz_minor-5)
-# 確保圖例文本為粗體並設定顏色
-for i, text in enumerate(legend.get_texts()):
+# 手動創建所有圖例元素以統一控制大小
+from matplotlib.lines import Line2D
+
+# 創建E1~E3的圖例元素
+legend_elements = []
+dataset_keys = list(all_datasets.keys())
+for key in dataset_keys:
+    if key == 'E1':
+        label_name = 'E1 霧峰水田'
+    elif key == 'E2':
+        label_name = 'E2 霧峰旱田' 
+    elif key == 'E3':
+        label_name = 'E3 竹塘水田'
+    else:
+        label_name = key
+    
+    legend_elements.append(Line2D([0], [0], marker='o', color='w', 
+                                 markerfacecolor=colors[key], markersize=8, 
+                                 label=label_name))
+
+# 添加紅點的圖例說明
+legend_elements.append(Line2D([0], [0], marker='o', color='w', 
+                             markerfacecolor='red', markersize=8, 
+                             label='擬合選取之數據'))
+
+# 創建圖例
+new_legend = ax1.legend(handles=legend_elements, fontsize=fz_minor-5)
+
+# 設定圖例文字的顏色和粗體
+for i, text in enumerate(new_legend.get_texts()):
     text.set_weight('bold')
-    # 獲取對應的資料集鍵值並設定顏色
-    dataset_keys = list(all_datasets.keys())
-    if i < len(dataset_keys):
+    if i < len(dataset_keys):  # E1~E3
         key = dataset_keys[i]
         text.set_color(colors[key])
+    else:  # 紅點圖例
+        text.set_color('red')
 
 plt.tight_layout()
 plt.show()
@@ -757,7 +818,12 @@ fig.savefig('time_series.png',dpi=300,bbox_inches='tight')
 fig, ax = plt.subplots(figsize=(15, 5))
 
 for key in all_datasets.keys():
-    df_RHOA = all_datasets[key]
+    df_RHOA = all_datasets[key]['rhoa']
+    df_window = all_datasets[key]['window']
+    
+    # 轉換時間格式
+    df_window['x'] = pd.to_datetime(df_window['x'])
+    
     # 篩選特定時間範圍的資料
     mask = (df_RHOA['date'] >= pd.to_datetime('2024/10/08 00:00:00')) & \
            (df_RHOA['date'] <= pd.to_datetime('2024/10/14 14:00:00'))
@@ -766,6 +832,23 @@ for key in all_datasets.keys():
     if not df_filtered.empty:
         ax.plot(df_filtered['date'], np.log10(df_filtered['median_RHOA']), 
                 'o', color=colors[key], markersize=10, label=f'{key}', zorder=2)
+    
+    # 處理時間窗並用紅線繪製選取擬合之的數據（在放大區間內）
+    for i in range(0, len(df_window) - 1, 2):
+        start_time = df_window.loc[i, 'x']
+        end_time = df_window.loc[i + 1, 'x']
+        
+        # 篩選出在此時間窗口內且在放大區間內的資料
+        window_mask = (df_RHOA['date'] >= start_time) & (df_RHOA['date'] <= end_time)
+        zoom_mask = (df_RHOA['date'] >= pd.to_datetime('2024/10/08 00:00:00')) & \
+                   (df_RHOA['date'] <= pd.to_datetime('2024/10/14 14:00:00'))
+        combined_mask = window_mask & zoom_mask
+        df_window_filtered = df_RHOA.loc[combined_mask].copy()
+        
+        if not df_window_filtered.empty:
+            # 用紅點繪製選取擬合之的數據
+            ax.plot(df_window_filtered['date'], np.log10(df_window_filtered['median_RHOA']), 
+                    'o', color='red', markersize=12, alpha=0.8, zorder=3)
 
 fontsize = 20
 ax.set_ylabel('視電阻率'+'\n'+r'$log(\rho_a)$', fontsize=fontsize+5, fontweight='bold')

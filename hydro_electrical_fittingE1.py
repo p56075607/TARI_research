@@ -105,7 +105,7 @@ for i in range(len(filterd_hydro_data)):
 rhoa = [all_data[i] for i in index]
 filterd_hydro_data['rhoa'] = rhoa
 
-
+# %%
 filterd_hydro_data = filterd_hydro_data[(filterd_hydro_data['date_time'] > '2024-08-17 00:00:00') & (filterd_hydro_data['date_time'] < '2024-09-20 00:00:00')]
 fig, ax = plt.subplots(figsize=(15,8))
 ax.plot(filterd_hydro_data['date_time'], filterd_hydro_data['mean_1m'], label="mean_1m")
