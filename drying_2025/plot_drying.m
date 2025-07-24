@@ -1,6 +1,6 @@
 % plot_drying.m  使用 createfigure 繪圖
 clear; close all; clc;
-folder = fullfile(fileparts(mfilename('fullpath')), 'alpha_one_by_column');
+folder = fullfile(fileparts(mfilename('fullpath')), 'alpha_one_by_column_old');
 files  = dir(fullfile(folder, 'dryingtime_alpha_one_RHOA_*_E1.csv'));
 if isempty(files)
     error('未找到 CSV 檔，請確認路徑：%s', folder);

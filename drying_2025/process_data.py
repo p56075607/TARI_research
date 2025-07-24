@@ -30,7 +30,7 @@ def load_data(conf_file, file_key):
         
     if file_key in config:
         window_path = r'C:\Users\Git\TARI_research\drying_2025\E1_window.csv'#config[file_key]['window']
-        rhoa_path = r'C:\Users\Git\TARI_research\drying_2025\alpha_one_rhoa_data.csv'#config[file_key]['rhoa']
+        rhoa_path = r'C:\Users\Git\TARI_research\drying_2025\alpha_one_rhoa_data_corrected.csv'#config[file_key]['rhoa']
         
         # Check if the files exist
         if not os.path.exists(window_path):
